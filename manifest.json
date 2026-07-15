@@ -2,7 +2,7 @@
   "name": "Essence — Perfume Store POS",
   "short_name": "Essence",
   "description": "نقطة بيع لمحل عطور فاخرة — بيع، ستوك، تقارير، وراس مال، بمزامنة حية.",
-  "start_url": "./essence-app.html",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",

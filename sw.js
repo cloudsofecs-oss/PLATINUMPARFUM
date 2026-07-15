@@ -8,9 +8,9 @@
 // للشبكة مباشرة (يفشلو بلا انترنت وهادشي عادي، الـ outbox هو لي كيتكفل بالإعادة).
 // ============================================================================
 
-const CACHE_VERSION = 'essence-shell-v1';
+const CACHE_VERSION = 'essence-shell-v2';
 const APP_SHELL = [
-  './essence-app.html',
+  './index.html',
   './manifest.json',
   './icon-192.png',
   './icon-512.png',
@@ -45,7 +45,7 @@ self.addEventListener('fetch', (event) => {
   if (isSupabaseRequest(url)) return; // خلي طلبات Supabase تفوت مباشرة للشبكة، بلا تدخل SW
 
   // Network-first لـ essence-app.html نفسها: بغينا آخر نسخة كل ما كاين انترنت، وكاش كـ fallback بوحدو
-  const isAppShellDoc = req.mode === 'navigate' || url.pathname.endsWith('essence-app.html');
+  const isAppShellDoc = req.mode === 'navigate' || url.pathname.endsWith('index.html');
   if (isAppShellDoc) {
     event.respondWith(
       fetch(req)
@@ -54,7 +54,7 @@ self.addEventListener('fetch', (event) => {
           caches.open(CACHE_VERSION).then((cache) => cache.put(req, copy));
           return res;
         })
-        .catch(() => caches.match(req).then((cached) => cached || caches.match('./essence-app.html')))
+        .catch(() => caches.match(req).then((cached) => cached || caches.match('./index.html')))
     );
     return;
   }
