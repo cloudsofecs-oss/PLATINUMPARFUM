@@ -9648,15 +9648,17 @@ window.__productVisualHTML = function(p, opts){
   });
 
   /* ---------- Page refresher (goToPage كيسمّعها + تبديل اللغة) ---------- */
-  // updateSectionHead/renderBranches/renderTeam/renderPaymentMethods/renderLargeExpenseSub كامل
+  // updateSectionHead/renderBranches/renderTeam/renderPaymentMethods/updateLargeExpenseLabel كامل
   // فيهم نص مترجم دينامكي — بلا هاد الـ refresher، تبديل اللغة وأنت راكي فـ Settings
   // ماكانش غايبدل حتى واحد منهم (نفس الدرس المكتوب فـ Expenses/Stock: راقب شنو كيغطي الـ refresher).
+  // ⚠️ تصليح: الدالة الحقيقية اسمها updateLargeExpenseLabel() (معرفة فوق، خط ~9089) — سطر قديم
+  // كان كيسمي renderLargeExpenseSub() (ماكانتش معرفة أبدا) → ReferenceError كل مرة يتفتح Settings.
   window.__pageRefreshers.settings = function(){
     updateSectionHead(currentSec);
     renderBranches();
     renderTeam();
     renderPaymentMethods();
-    renderLargeExpenseSub();
+    updateLargeExpenseLabel();
   };
 
 })();
