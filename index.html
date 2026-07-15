@@ -12,8 +12,26 @@
 <meta charset="UTF-8">
 <title>Essence — Perfume Store POS</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- ===== PWA (PHASE 8أ): manifest + أيقونات + service worker ===== -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#09090B">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png" sizes="192x192" type="image/png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Essence">
+<script>
+  // تسجيل service worker (sw.js) — بلا ما يوقف التطبيق لو فشل (متصفح قديم، ماكاينش https محليا...).
+  // ⚠️ خاصو يخدم من نفس المجلد فوق http(s) حقيقي (GitHub Pages أو خادم dev بـ http-server) — file://
+  // مباشرة كيمنع service workers، PWA install وSupabase Realtime (WebSocket) كيفشلو بلا هاد الشرط.
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch((e) => console.warn('[Essence/PWA] تسجيل service worker فشل:', e));
+    });
+  }
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <style>
 /* ===== home ===== */
@@ -69,25 +87,26 @@
   .app-shell{ position:relative; z-index:1; display:grid; grid-template-columns: 92px 1fr;
     grid-template-rows: 100vh; height:100vh; width:100vw; gap:14px; padding:14px; }
 
-  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:20px 0 16px; }
-  .sidebar .brand{ width:40px; height:40px; border-radius:12px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
-    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:28px; }
-  .sidebar .brand svg{ width:20px; height:20px; stroke:white; }
-  .nav-list{ display:flex; flex-direction:column; gap:6px; flex:1; align-items:center; width:100%;}
-  .nav-item{ width:64px; padding:9px 0 7px; border-radius:14px; display:flex; flex-direction:column; align-items:center; gap:5px;
+  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:14px 0 10px; }
+  .sidebar .brand{ width:34px; height:34px; border-radius:10px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
+    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:16px; }
+  .sidebar .brand svg{ width:16px; height:16px; stroke:white; }
+  .nav-list{ display:flex; flex-direction:column; gap:3px; flex:1; align-items:center; width:100%; overflow-y:auto; overflow-x:hidden; scrollbar-width:none; min-height:0; }
+  .nav-list::-webkit-scrollbar{ display:none; }
+  .nav-item{ width:64px; padding:6px 0 5px; border-radius:12px; display:flex; flex-direction:column; align-items:center; gap:3px;
     color:var(--text-dim); cursor:pointer; position:relative; transition: all .25s cubic-bezier(.2,.8,.2,1); }
-  .nav-item svg{ width:19px; height:19px; stroke-width:1.6; transition: transform .25s; }
-  .nav-item span{ font-size:9.5px; font-weight:500; letter-spacing:.2px; }
+  .nav-item svg{ width:17px; height:17px; stroke-width:1.6; transition: transform .25s; }
+  .nav-item span{ font-size:8.5px; font-weight:500; letter-spacing:.2px; }
   .nav-item:hover{ color:var(--text); background:var(--fill-3); transform:translateY(-1px); }
   .nav-item:hover svg{ transform:scale(1.08); }
   .nav-item.active{ color:var(--text); background: linear-gradient(180deg, rgba(124,92,255,0.22), rgba(124,92,255,0.06));
     box-shadow: inset 0 0 0 1px rgba(124,92,255,0.35), 0 4px 16px rgba(124,92,255,0.18); }
   .nav-item.active::before{ content:''; position:absolute; left:-11px; top:50%; transform:translateY(-50%);
     width:3px; height:16px; border-radius:3px; background:var(--purple); box-shadow:0 0 10px var(--purple); }
-  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:10px; width:100%; padding-top:14px; border-top:1px solid var(--border-soft); }
-  .avatar{ width:36px; height:36px; border-radius:11px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
-    display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#0c0a06; }
-  .sidebar-footer .role{ font-size:8.5px; color:var(--text-faint); text-align:center; line-height:1.3; }
+  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:6px; width:100%; padding-top:8px; border-top:1px solid var(--border-soft); }
+  .avatar{ width:30px; height:30px; border-radius:9px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
+    display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#0c0a06; }
+  .sidebar-footer .role{ font-size:7.5px; color:var(--text-faint); text-align:center; line-height:1.2; }
   .logout-btn{ color:var(--text-faint); cursor:pointer; padding:6px; border-radius:8px; transition:.2s;}
   .logout-btn:hover{ color:var(--error); background:rgba(248,113,113,0.08); }
   .logout-btn svg{ width:16px; height:16px; }
@@ -106,6 +125,8 @@
   .icon-btn:hover{ color:var(--text); background:var(--fill-2); transform:translateY(-1px); }
   .icon-btn svg{ width:17px; height:17px; stroke-width:1.7; }
   .icon-btn .dot{ position:absolute; top:8px; right:8px; width:6px; height:6px; border-radius:50%; background:var(--gold); box-shadow:0 0 6px var(--gold); }
+  @keyframes essence-sync-spin{ to{ transform:rotate(360deg); } }
+  .sync-now-btn.syncing i{ animation:essence-sync-spin .8s linear infinite; display:inline-block; }
   .btn-primary{ height:40px; padding:0 16px; border-radius:12px; border:none; cursor:pointer;
     background:linear-gradient(140deg, var(--purple), #6142E0); color:white; font-size:12.5px; font-weight:600; font-family:inherit;
     display:flex; align-items:center; gap:7px; flex-shrink:0; box-shadow:0 4px 16px rgba(124,92,255,0.35); transition:.2s; }
@@ -306,26 +327,27 @@
   .sidebar{
     border-radius: var(--radius-lg);
     display:flex; flex-direction:column; align-items:center;
-    padding:20px 0 16px;
+    padding:14px 0 10px;
   }
   .sidebar .brand{
-    width:40px; height:40px; border-radius:12px;
+    width:34px; height:34px; border-radius:10px;
     background: linear-gradient(140deg, var(--purple), #4B2FD9);
     display:flex; align-items:center; justify-content:center;
     box-shadow: 0 4px 18px rgba(124,92,255,0.45);
-    margin-bottom:28px;
+    margin-bottom:16px;
   }
-  .sidebar .brand svg{ width:20px; height:20px; stroke:white; }
+  .sidebar .brand svg{ width:16px; height:16px; stroke:white; }
 
-  .nav-list{ display:flex; flex-direction:column; gap:6px; flex:1; align-items:center; width:100%;}
+  .nav-list{ display:flex; flex-direction:column; gap:3px; flex:1; align-items:center; width:100%; overflow-y:auto; overflow-x:hidden; scrollbar-width:none; min-height:0; }
+  .nav-list::-webkit-scrollbar{ display:none; }
   .nav-item{
-    width:64px; padding:9px 0 7px; border-radius:14px;
-    display:flex; flex-direction:column; align-items:center; gap:5px;
+    width:64px; padding:6px 0 5px; border-radius:12px;
+    display:flex; flex-direction:column; align-items:center; gap:3px;
     color:var(--text-dim); cursor:pointer; position:relative;
     transition: all .25s cubic-bezier(.2,.8,.2,1);
   }
-  .nav-item svg{ width:19px; height:19px; stroke-width:1.6; transition: transform .25s; }
-  .nav-item span{ font-size:9.5px; font-weight:500; letter-spacing:.2px; }
+  .nav-item svg{ width:17px; height:17px; stroke-width:1.6; transition: transform .25s; }
+  .nav-item span{ font-size:8.5px; font-weight:500; letter-spacing:.2px; }
   .nav-item:hover{ color:var(--text); background:var(--fill-3); transform:translateY(-1px); }
   .nav-item:hover svg{ transform:scale(1.08); }
   .nav-item.active{
@@ -339,14 +361,14 @@
     box-shadow:0 0 10px var(--purple);
   }
 
-  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:10px; width:100%; padding-top:14px; border-top:1px solid var(--border-soft); }
+  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:6px; width:100%; padding-top:8px; border-top:1px solid var(--border-soft); }
   .avatar{
-    width:36px; height:36px; border-radius:11px; overflow:hidden;
+    width:30px; height:30px; border-radius:9px; overflow:hidden;
     background:linear-gradient(140deg,var(--gold),#8a6b2e);
     display:flex; align-items:center; justify-content:center;
-    font-size:13px; font-weight:700; color:#0c0a06;
+    font-size:11px; font-weight:700; color:#0c0a06;
   }
-  .sidebar-footer .role{ font-size:8.5px; color:var(--text-faint); text-align:center; line-height:1.3; }
+  .sidebar-footer .role{ font-size:7.5px; color:var(--text-faint); text-align:center; line-height:1.2; }
   .logout-btn{ color:var(--text-faint); cursor:pointer; padding:6px; border-radius:8px; transition:.2s;}
   .logout-btn:hover{ color:var(--error); background:rgba(248,113,113,0.08); }
   .logout-btn svg{ width:16px; height:16px; }
@@ -702,25 +724,26 @@
     grid-template-rows: 100vh; height:100vh; width:100vw; gap:14px; padding:14px; }
 
   /* Sidebar (identical to POS screen) */
-  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:20px 0 16px; }
-  .sidebar .brand{ width:40px; height:40px; border-radius:12px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
-    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:28px; }
-  .sidebar .brand svg{ width:20px; height:20px; stroke:white; }
-  .nav-list{ display:flex; flex-direction:column; gap:6px; flex:1; align-items:center; width:100%;}
-  .nav-item{ width:64px; padding:9px 0 7px; border-radius:14px; display:flex; flex-direction:column; align-items:center; gap:5px;
+  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:14px 0 10px; }
+  .sidebar .brand{ width:34px; height:34px; border-radius:10px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
+    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:16px; }
+  .sidebar .brand svg{ width:16px; height:16px; stroke:white; }
+  .nav-list{ display:flex; flex-direction:column; gap:3px; flex:1; align-items:center; width:100%; overflow-y:auto; overflow-x:hidden; scrollbar-width:none; min-height:0; }
+  .nav-list::-webkit-scrollbar{ display:none; }
+  .nav-item{ width:64px; padding:6px 0 5px; border-radius:12px; display:flex; flex-direction:column; align-items:center; gap:3px;
     color:var(--text-dim); cursor:pointer; position:relative; transition: all .25s cubic-bezier(.2,.8,.2,1); }
-  .nav-item svg{ width:19px; height:19px; stroke-width:1.6; transition: transform .25s; }
-  .nav-item span{ font-size:9.5px; font-weight:500; letter-spacing:.2px; }
+  .nav-item svg{ width:17px; height:17px; stroke-width:1.6; transition: transform .25s; }
+  .nav-item span{ font-size:8.5px; font-weight:500; letter-spacing:.2px; }
   .nav-item:hover{ color:var(--text); background:var(--fill-3); transform:translateY(-1px); }
   .nav-item:hover svg{ transform:scale(1.08); }
   .nav-item.active{ color:var(--text); background: linear-gradient(180deg, rgba(124,92,255,0.22), rgba(124,92,255,0.06));
     box-shadow: inset 0 0 0 1px rgba(124,92,255,0.35), 0 4px 16px rgba(124,92,255,0.18); }
   .nav-item.active::before{ content:''; position:absolute; left:-11px; top:50%; transform:translateY(-50%);
     width:3px; height:16px; border-radius:3px; background:var(--purple); box-shadow:0 0 10px var(--purple); }
-  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:10px; width:100%; padding-top:14px; border-top:1px solid var(--border-soft); }
-  .avatar{ width:36px; height:36px; border-radius:11px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
-    display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#0c0a06; }
-  .sidebar-footer .role{ font-size:8.5px; color:var(--text-faint); text-align:center; line-height:1.3; }
+  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:6px; width:100%; padding-top:8px; border-top:1px solid var(--border-soft); }
+  .avatar{ width:30px; height:30px; border-radius:9px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
+    display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#0c0a06; }
+  .sidebar-footer .role{ font-size:7.5px; color:var(--text-faint); text-align:center; line-height:1.2; }
   .logout-btn{ color:var(--text-faint); cursor:pointer; padding:6px; border-radius:8px; transition:.2s;}
   .logout-btn:hover{ color:var(--error); background:rgba(248,113,113,0.08); }
   .logout-btn svg{ width:16px; height:16px; }
@@ -952,25 +975,26 @@
     grid-template-rows: 100vh; height:100vh; width:100vw; gap:14px; padding:14px; }
 
   /* Sidebar */
-  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:20px 0 16px; }
-  .sidebar .brand{ width:40px; height:40px; border-radius:12px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
-    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:28px; }
-  .sidebar .brand svg{ width:20px; height:20px; stroke:white; }
-  .nav-list{ display:flex; flex-direction:column; gap:6px; flex:1; align-items:center; width:100%;}
-  .nav-item{ width:64px; padding:9px 0 7px; border-radius:14px; display:flex; flex-direction:column; align-items:center; gap:5px;
+  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:14px 0 10px; }
+  .sidebar .brand{ width:34px; height:34px; border-radius:10px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
+    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:16px; }
+  .sidebar .brand svg{ width:16px; height:16px; stroke:white; }
+  .nav-list{ display:flex; flex-direction:column; gap:3px; flex:1; align-items:center; width:100%; overflow-y:auto; overflow-x:hidden; scrollbar-width:none; min-height:0; }
+  .nav-list::-webkit-scrollbar{ display:none; }
+  .nav-item{ width:64px; padding:6px 0 5px; border-radius:12px; display:flex; flex-direction:column; align-items:center; gap:3px;
     color:var(--text-dim); cursor:pointer; position:relative; transition: all .25s cubic-bezier(.2,.8,.2,1); }
-  .nav-item svg{ width:19px; height:19px; stroke-width:1.6; transition: transform .25s; }
-  .nav-item span{ font-size:9.5px; font-weight:500; letter-spacing:.2px; }
+  .nav-item svg{ width:17px; height:17px; stroke-width:1.6; transition: transform .25s; }
+  .nav-item span{ font-size:8.5px; font-weight:500; letter-spacing:.2px; }
   .nav-item:hover{ color:var(--text); background:var(--fill-3); transform:translateY(-1px); }
   .nav-item:hover svg{ transform:scale(1.08); }
   .nav-item.active{ color:var(--text); background: linear-gradient(180deg, rgba(124,92,255,0.22), rgba(124,92,255,0.06));
     box-shadow: inset 0 0 0 1px rgba(124,92,255,0.35), 0 4px 16px rgba(124,92,255,0.18); }
   .nav-item.active::before{ content:''; position:absolute; left:-11px; top:50%; transform:translateY(-50%);
     width:3px; height:16px; border-radius:3px; background:var(--purple); box-shadow:0 0 10px var(--purple); }
-  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:10px; width:100%; padding-top:14px; border-top:1px solid var(--border-soft); }
-  .avatar{ width:36px; height:36px; border-radius:11px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
-    display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#0c0a06; }
-  .sidebar-footer .role{ font-size:8.5px; color:var(--text-faint); text-align:center; line-height:1.3; }
+  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:6px; width:100%; padding-top:8px; border-top:1px solid var(--border-soft); }
+  .avatar{ width:30px; height:30px; border-radius:9px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
+    display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#0c0a06; }
+  .sidebar-footer .role{ font-size:7.5px; color:var(--text-faint); text-align:center; line-height:1.2; }
   .logout-btn{ color:var(--text-faint); cursor:pointer; padding:6px; border-radius:8px; transition:.2s;}
   .logout-btn:hover{ color:var(--error); background:rgba(248,113,113,0.08); }
   .logout-btn svg{ width:16px; height:16px; }
@@ -1093,25 +1117,26 @@
   .app-shell{ position:relative; z-index:1; display:grid; grid-template-columns: 92px 1fr;
     grid-template-rows: 100vh; height:100vh; width:100vw; gap:14px; padding:14px; }
 
-  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:20px 0 16px; }
-  .sidebar .brand{ width:40px; height:40px; border-radius:12px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
-    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:28px; }
-  .sidebar .brand svg{ width:20px; height:20px; stroke:white; }
-  .nav-list{ display:flex; flex-direction:column; gap:6px; flex:1; align-items:center; width:100%;}
-  .nav-item{ width:64px; padding:9px 0 7px; border-radius:14px; display:flex; flex-direction:column; align-items:center; gap:5px;
+  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:14px 0 10px; }
+  .sidebar .brand{ width:34px; height:34px; border-radius:10px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
+    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:16px; }
+  .sidebar .brand svg{ width:16px; height:16px; stroke:white; }
+  .nav-list{ display:flex; flex-direction:column; gap:3px; flex:1; align-items:center; width:100%; overflow-y:auto; overflow-x:hidden; scrollbar-width:none; min-height:0; }
+  .nav-list::-webkit-scrollbar{ display:none; }
+  .nav-item{ width:64px; padding:6px 0 5px; border-radius:12px; display:flex; flex-direction:column; align-items:center; gap:3px;
     color:var(--text-dim); cursor:pointer; position:relative; transition: all .25s cubic-bezier(.2,.8,.2,1); }
-  .nav-item svg{ width:19px; height:19px; stroke-width:1.6; transition: transform .25s; }
-  .nav-item span{ font-size:9.5px; font-weight:500; letter-spacing:.2px; }
+  .nav-item svg{ width:17px; height:17px; stroke-width:1.6; transition: transform .25s; }
+  .nav-item span{ font-size:8.5px; font-weight:500; letter-spacing:.2px; }
   .nav-item:hover{ color:var(--text); background:var(--fill-3); transform:translateY(-1px); }
   .nav-item:hover svg{ transform:scale(1.08); }
   .nav-item.active{ color:var(--text); background: linear-gradient(180deg, rgba(124,92,255,0.22), rgba(124,92,255,0.06));
     box-shadow: inset 0 0 0 1px rgba(124,92,255,0.35), 0 4px 16px rgba(124,92,255,0.18); }
   .nav-item.active::before{ content:''; position:absolute; left:-11px; top:50%; transform:translateY(-50%);
     width:3px; height:16px; border-radius:3px; background:var(--purple); box-shadow:0 0 10px var(--purple); }
-  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:10px; width:100%; padding-top:14px; border-top:1px solid var(--border-soft); }
-  .avatar{ width:36px; height:36px; border-radius:11px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
-    display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#0c0a06; }
-  .sidebar-footer .role{ font-size:8.5px; color:var(--text-faint); text-align:center; line-height:1.3; }
+  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:6px; width:100%; padding-top:8px; border-top:1px solid var(--border-soft); }
+  .avatar{ width:30px; height:30px; border-radius:9px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
+    display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#0c0a06; }
+  .sidebar-footer .role{ font-size:7.5px; color:var(--text-faint); text-align:center; line-height:1.2; }
   .logout-btn{ color:var(--text-faint); cursor:pointer; padding:6px; border-radius:8px; transition:.2s;}
   .logout-btn:hover{ color:var(--error); background:rgba(248,113,113,0.08); }
   .logout-btn svg{ width:16px; height:16px; }
@@ -1287,25 +1312,26 @@
   .app-shell{ position:relative; z-index:1; display:grid; grid-template-columns: 92px 1fr;
     grid-template-rows: 100vh; height:100vh; width:100vw; gap:14px; padding:14px; }
 
-  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:20px 0 16px; }
-  .sidebar .brand{ width:40px; height:40px; border-radius:12px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
-    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:28px; }
-  .sidebar .brand svg{ width:20px; height:20px; stroke:white; }
-  .nav-list{ display:flex; flex-direction:column; gap:6px; flex:1; align-items:center; width:100%;}
-  .nav-item{ width:64px; padding:9px 0 7px; border-radius:14px; display:flex; flex-direction:column; align-items:center; gap:5px;
+  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:14px 0 10px; }
+  .sidebar .brand{ width:34px; height:34px; border-radius:10px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
+    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:16px; }
+  .sidebar .brand svg{ width:16px; height:16px; stroke:white; }
+  .nav-list{ display:flex; flex-direction:column; gap:3px; flex:1; align-items:center; width:100%; overflow-y:auto; overflow-x:hidden; scrollbar-width:none; min-height:0; }
+  .nav-list::-webkit-scrollbar{ display:none; }
+  .nav-item{ width:64px; padding:6px 0 5px; border-radius:12px; display:flex; flex-direction:column; align-items:center; gap:3px;
     color:var(--text-dim); cursor:pointer; position:relative; transition: all .25s cubic-bezier(.2,.8,.2,1); }
-  .nav-item svg{ width:19px; height:19px; stroke-width:1.6; transition: transform .25s; }
-  .nav-item span{ font-size:9.5px; font-weight:500; letter-spacing:.2px; }
+  .nav-item svg{ width:17px; height:17px; stroke-width:1.6; transition: transform .25s; }
+  .nav-item span{ font-size:8.5px; font-weight:500; letter-spacing:.2px; }
   .nav-item:hover{ color:var(--text); background:var(--fill-3); transform:translateY(-1px); }
   .nav-item:hover svg{ transform:scale(1.08); }
   .nav-item.active{ color:var(--text); background: linear-gradient(180deg, rgba(124,92,255,0.22), rgba(124,92,255,0.06));
     box-shadow: inset 0 0 0 1px rgba(124,92,255,0.35), 0 4px 16px rgba(124,92,255,0.18); }
   .nav-item.active::before{ content:''; position:absolute; left:-11px; top:50%; transform:translateY(-50%);
     width:3px; height:16px; border-radius:3px; background:var(--purple); box-shadow:0 0 10px var(--purple); }
-  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:10px; width:100%; padding-top:14px; border-top:1px solid var(--border-soft); }
-  .avatar{ width:36px; height:36px; border-radius:11px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
-    display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#0c0a06; }
-  .sidebar-footer .role{ font-size:8.5px; color:var(--text-faint); text-align:center; line-height:1.3; }
+  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:6px; width:100%; padding-top:8px; border-top:1px solid var(--border-soft); }
+  .avatar{ width:30px; height:30px; border-radius:9px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
+    display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#0c0a06; }
+  .sidebar-footer .role{ font-size:7.5px; color:var(--text-faint); text-align:center; line-height:1.2; }
   .logout-btn{ color:var(--text-faint); cursor:pointer; padding:6px; border-radius:8px; transition:.2s;}
   .logout-btn:hover{ color:var(--error); background:rgba(248,113,113,0.08); }
   .logout-btn svg{ width:16px; height:16px; }
@@ -1481,25 +1507,26 @@
     grid-template-rows: 100vh; height:100vh; width:100vw; gap:14px; padding:14px; }
 
   /* Sidebar */
-  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:20px 0 16px; }
-  .sidebar .brand{ width:40px; height:40px; border-radius:12px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
-    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:28px; }
-  .sidebar .brand svg{ width:20px; height:20px; stroke:white; }
-  .nav-list{ display:flex; flex-direction:column; gap:6px; flex:1; align-items:center; width:100%;}
-  .nav-item{ width:64px; padding:9px 0 7px; border-radius:14px; display:flex; flex-direction:column; align-items:center; gap:5px;
+  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:14px 0 10px; }
+  .sidebar .brand{ width:34px; height:34px; border-radius:10px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
+    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:16px; }
+  .sidebar .brand svg{ width:16px; height:16px; stroke:white; }
+  .nav-list{ display:flex; flex-direction:column; gap:3px; flex:1; align-items:center; width:100%; overflow-y:auto; overflow-x:hidden; scrollbar-width:none; min-height:0; }
+  .nav-list::-webkit-scrollbar{ display:none; }
+  .nav-item{ width:64px; padding:6px 0 5px; border-radius:12px; display:flex; flex-direction:column; align-items:center; gap:3px;
     color:var(--text-dim); cursor:pointer; position:relative; transition: all .25s cubic-bezier(.2,.8,.2,1); }
-  .nav-item svg{ width:19px; height:19px; stroke-width:1.6; transition: transform .25s; }
-  .nav-item span{ font-size:9.5px; font-weight:500; letter-spacing:.2px; }
+  .nav-item svg{ width:17px; height:17px; stroke-width:1.6; transition: transform .25s; }
+  .nav-item span{ font-size:8.5px; font-weight:500; letter-spacing:.2px; }
   .nav-item:hover{ color:var(--text); background:var(--fill-3); transform:translateY(-1px); }
   .nav-item:hover svg{ transform:scale(1.08); }
   .nav-item.active{ color:var(--text); background: linear-gradient(180deg, rgba(124,92,255,0.22), rgba(124,92,255,0.06));
     box-shadow: inset 0 0 0 1px rgba(124,92,255,0.35), 0 4px 16px rgba(124,92,255,0.18); }
   .nav-item.active::before{ content:''; position:absolute; left:-11px; top:50%; transform:translateY(-50%);
     width:3px; height:16px; border-radius:3px; background:var(--purple); box-shadow:0 0 10px var(--purple); }
-  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:10px; width:100%; padding-top:14px; border-top:1px solid var(--border-soft); }
-  .avatar{ width:36px; height:36px; border-radius:11px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
-    display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#0c0a06; }
-  .sidebar-footer .role{ font-size:8.5px; color:var(--text-faint); text-align:center; line-height:1.3; }
+  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:6px; width:100%; padding-top:8px; border-top:1px solid var(--border-soft); }
+  .avatar{ width:30px; height:30px; border-radius:9px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
+    display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#0c0a06; }
+  .sidebar-footer .role{ font-size:7.5px; color:var(--text-faint); text-align:center; line-height:1.2; }
   .logout-btn{ color:var(--text-faint); cursor:pointer; padding:6px; border-radius:8px; transition:.2s;}
   .logout-btn:hover{ color:var(--error); background:rgba(248,113,113,0.08); }
   .logout-btn svg{ width:16px; height:16px; }
@@ -1731,25 +1758,26 @@
   .app-shell{ position:relative; z-index:1; display:grid; grid-template-columns: 92px 1fr;
     grid-template-rows: 100vh; height:100vh; width:100vw; gap:14px; padding:14px; }
 
-  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:20px 0 16px; }
-  .sidebar .brand{ width:40px; height:40px; border-radius:12px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
-    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:28px; }
-  .sidebar .brand svg{ width:20px; height:20px; stroke:white; }
-  .nav-list{ display:flex; flex-direction:column; gap:6px; flex:1; align-items:center; width:100%;}
-  .nav-item{ width:64px; padding:9px 0 7px; border-radius:14px; display:flex; flex-direction:column; align-items:center; gap:5px;
+  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:14px 0 10px; }
+  .sidebar .brand{ width:34px; height:34px; border-radius:10px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
+    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:16px; }
+  .sidebar .brand svg{ width:16px; height:16px; stroke:white; }
+  .nav-list{ display:flex; flex-direction:column; gap:3px; flex:1; align-items:center; width:100%; overflow-y:auto; overflow-x:hidden; scrollbar-width:none; min-height:0; }
+  .nav-list::-webkit-scrollbar{ display:none; }
+  .nav-item{ width:64px; padding:6px 0 5px; border-radius:12px; display:flex; flex-direction:column; align-items:center; gap:3px;
     color:var(--text-dim); cursor:pointer; position:relative; transition: all .25s cubic-bezier(.2,.8,.2,1); }
-  .nav-item svg{ width:19px; height:19px; stroke-width:1.6; transition: transform .25s; }
-  .nav-item span{ font-size:9.5px; font-weight:500; letter-spacing:.2px; }
+  .nav-item svg{ width:17px; height:17px; stroke-width:1.6; transition: transform .25s; }
+  .nav-item span{ font-size:8.5px; font-weight:500; letter-spacing:.2px; }
   .nav-item:hover{ color:var(--text); background:var(--fill-3); transform:translateY(-1px); }
   .nav-item:hover svg{ transform:scale(1.08); }
   .nav-item.active{ color:var(--text); background: linear-gradient(180deg, rgba(124,92,255,0.22), rgba(124,92,255,0.06));
     box-shadow: inset 0 0 0 1px rgba(124,92,255,0.35), 0 4px 16px rgba(124,92,255,0.18); }
   .nav-item.active::before{ content:''; position:absolute; left:-11px; top:50%; transform:translateY(-50%);
     width:3px; height:16px; border-radius:3px; background:var(--purple); box-shadow:0 0 10px var(--purple); }
-  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:10px; width:100%; padding-top:14px; border-top:1px solid var(--border-soft); }
-  .avatar{ width:36px; height:36px; border-radius:11px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
-    display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#0c0a06; }
-  .sidebar-footer .role{ font-size:8.5px; color:var(--text-faint); text-align:center; line-height:1.3; }
+  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:6px; width:100%; padding-top:8px; border-top:1px solid var(--border-soft); }
+  .avatar{ width:30px; height:30px; border-radius:9px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
+    display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#0c0a06; }
+  .sidebar-footer .role{ font-size:7.5px; color:var(--text-faint); text-align:center; line-height:1.2; }
   .logout-btn{ color:var(--text-faint); cursor:pointer; padding:6px; border-radius:8px; transition:.2s;}
   .logout-btn:hover{ color:var(--error); background:rgba(248,113,113,0.08); }
   .logout-btn svg{ width:16px; height:16px; }
@@ -1932,25 +1960,26 @@
   .app-shell{ position:relative; z-index:1; display:grid; grid-template-columns: 92px 1fr;
     grid-template-rows: 100vh; height:100vh; width:100vw; gap:14px; padding:14px; }
 
-  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:20px 0 16px; }
-  .sidebar .brand{ width:40px; height:40px; border-radius:12px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
-    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:28px; }
-  .sidebar .brand svg{ width:20px; height:20px; stroke:white; }
-  .nav-list{ display:flex; flex-direction:column; gap:6px; flex:1; align-items:center; width:100%;}
-  .nav-item{ width:64px; padding:9px 0 7px; border-radius:14px; display:flex; flex-direction:column; align-items:center; gap:5px;
+  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:14px 0 10px; }
+  .sidebar .brand{ width:34px; height:34px; border-radius:10px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
+    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:16px; }
+  .sidebar .brand svg{ width:16px; height:16px; stroke:white; }
+  .nav-list{ display:flex; flex-direction:column; gap:3px; flex:1; align-items:center; width:100%; overflow-y:auto; overflow-x:hidden; scrollbar-width:none; min-height:0; }
+  .nav-list::-webkit-scrollbar{ display:none; }
+  .nav-item{ width:64px; padding:6px 0 5px; border-radius:12px; display:flex; flex-direction:column; align-items:center; gap:3px;
     color:var(--text-dim); cursor:pointer; position:relative; transition: all .25s cubic-bezier(.2,.8,.2,1); }
-  .nav-item svg{ width:19px; height:19px; stroke-width:1.6; transition: transform .25s; }
-  .nav-item span{ font-size:9.5px; font-weight:500; letter-spacing:.2px; }
+  .nav-item svg{ width:17px; height:17px; stroke-width:1.6; transition: transform .25s; }
+  .nav-item span{ font-size:8.5px; font-weight:500; letter-spacing:.2px; }
   .nav-item:hover{ color:var(--text); background:var(--fill-3); transform:translateY(-1px); }
   .nav-item:hover svg{ transform:scale(1.08); }
   .nav-item.active{ color:var(--text); background: linear-gradient(180deg, rgba(124,92,255,0.22), rgba(124,92,255,0.06));
     box-shadow: inset 0 0 0 1px rgba(124,92,255,0.35), 0 4px 16px rgba(124,92,255,0.18); }
   .nav-item.active::before{ content:''; position:absolute; left:-11px; top:50%; transform:translateY(-50%);
     width:3px; height:16px; border-radius:3px; background:var(--purple); box-shadow:0 0 10px var(--purple); }
-  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:10px; width:100%; padding-top:14px; border-top:1px solid var(--border-soft); }
-  .avatar{ width:36px; height:36px; border-radius:11px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
-    display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#0c0a06; }
-  .sidebar-footer .role{ font-size:8.5px; color:var(--text-faint); text-align:center; line-height:1.3; }
+  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:6px; width:100%; padding-top:8px; border-top:1px solid var(--border-soft); }
+  .avatar{ width:30px; height:30px; border-radius:9px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
+    display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#0c0a06; }
+  .sidebar-footer .role{ font-size:7.5px; color:var(--text-faint); text-align:center; line-height:1.2; }
   .logout-btn{ color:var(--text-faint); cursor:pointer; padding:6px; border-radius:8px; transition:.2s;}
   .logout-btn:hover{ color:var(--error); background:rgba(248,113,113,0.08); }
   .logout-btn svg{ width:16px; height:16px; }
@@ -2099,25 +2128,26 @@
   .app-shell{ position:relative; z-index:1; display:grid; grid-template-columns: 92px 1fr;
     grid-template-rows: 100vh; height:100vh; width:100vw; gap:14px; padding:14px; }
 
-  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:20px 0 16px; }
-  .sidebar .brand{ width:40px; height:40px; border-radius:12px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
-    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:28px; }
-  .sidebar .brand svg{ width:20px; height:20px; stroke:white; }
-  .nav-list{ display:flex; flex-direction:column; gap:6px; flex:1; align-items:center; width:100%;}
-  .nav-item{ width:64px; padding:9px 0 7px; border-radius:14px; display:flex; flex-direction:column; align-items:center; gap:5px;
+  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:14px 0 10px; }
+  .sidebar .brand{ width:34px; height:34px; border-radius:10px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
+    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:16px; }
+  .sidebar .brand svg{ width:16px; height:16px; stroke:white; }
+  .nav-list{ display:flex; flex-direction:column; gap:3px; flex:1; align-items:center; width:100%; overflow-y:auto; overflow-x:hidden; scrollbar-width:none; min-height:0; }
+  .nav-list::-webkit-scrollbar{ display:none; }
+  .nav-item{ width:64px; padding:6px 0 5px; border-radius:12px; display:flex; flex-direction:column; align-items:center; gap:3px;
     color:var(--text-dim); cursor:pointer; position:relative; transition: all .25s cubic-bezier(.2,.8,.2,1); }
-  .nav-item svg{ width:19px; height:19px; stroke-width:1.6; transition: transform .25s; }
-  .nav-item span{ font-size:9.5px; font-weight:500; letter-spacing:.2px; }
+  .nav-item svg{ width:17px; height:17px; stroke-width:1.6; transition: transform .25s; }
+  .nav-item span{ font-size:8.5px; font-weight:500; letter-spacing:.2px; }
   .nav-item:hover{ color:var(--text); background:var(--fill-3); transform:translateY(-1px); }
   .nav-item:hover svg{ transform:scale(1.08); }
   .nav-item.active{ color:var(--text); background: linear-gradient(180deg, rgba(124,92,255,0.22), rgba(124,92,255,0.06));
     box-shadow: inset 0 0 0 1px rgba(124,92,255,0.35), 0 4px 16px rgba(124,92,255,0.18); }
   .nav-item.active::before{ content:''; position:absolute; left:-11px; top:50%; transform:translateY(-50%);
     width:3px; height:16px; border-radius:3px; background:var(--purple); box-shadow:0 0 10px var(--purple); }
-  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:10px; width:100%; padding-top:14px; border-top:1px solid var(--border-soft); }
-  .avatar{ width:36px; height:36px; border-radius:11px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
-    display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#0c0a06; }
-  .sidebar-footer .role{ font-size:8.5px; color:var(--text-faint); text-align:center; line-height:1.3; }
+  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:6px; width:100%; padding-top:8px; border-top:1px solid var(--border-soft); }
+  .avatar{ width:30px; height:30px; border-radius:9px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
+    display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#0c0a06; }
+  .sidebar-footer .role{ font-size:7.5px; color:var(--text-faint); text-align:center; line-height:1.2; }
   .logout-btn{ color:var(--text-faint); cursor:pointer; padding:6px; border-radius:8px; transition:.2s;}
   .logout-btn:hover{ color:var(--error); background:rgba(248,113,113,0.08); }
   .logout-btn svg{ width:16px; height:16px; }
@@ -2275,25 +2305,26 @@
   .app-shell{ position:relative; z-index:1; display:grid; grid-template-columns: 92px 1fr;
     grid-template-rows: 100vh; height:100vh; width:100vw; gap:14px; padding:14px; }
 
-  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:20px 0 16px; }
-  .sidebar .brand{ width:40px; height:40px; border-radius:12px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
-    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:28px; }
-  .sidebar .brand svg{ width:20px; height:20px; stroke:white; }
-  .nav-list{ display:flex; flex-direction:column; gap:6px; flex:1; align-items:center; width:100%;}
-  .nav-item{ width:64px; padding:9px 0 7px; border-radius:14px; display:flex; flex-direction:column; align-items:center; gap:5px;
+  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:14px 0 10px; }
+  .sidebar .brand{ width:34px; height:34px; border-radius:10px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
+    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:16px; }
+  .sidebar .brand svg{ width:16px; height:16px; stroke:white; }
+  .nav-list{ display:flex; flex-direction:column; gap:3px; flex:1; align-items:center; width:100%; overflow-y:auto; overflow-x:hidden; scrollbar-width:none; min-height:0; }
+  .nav-list::-webkit-scrollbar{ display:none; }
+  .nav-item{ width:64px; padding:6px 0 5px; border-radius:12px; display:flex; flex-direction:column; align-items:center; gap:3px;
     color:var(--text-dim); cursor:pointer; position:relative; transition: all .25s cubic-bezier(.2,.8,.2,1); }
-  .nav-item svg{ width:19px; height:19px; stroke-width:1.6; transition: transform .25s; }
-  .nav-item span{ font-size:9.5px; font-weight:500; letter-spacing:.2px; }
+  .nav-item svg{ width:17px; height:17px; stroke-width:1.6; transition: transform .25s; }
+  .nav-item span{ font-size:8.5px; font-weight:500; letter-spacing:.2px; }
   .nav-item:hover{ color:var(--text); background:var(--fill-3); transform:translateY(-1px); }
   .nav-item:hover svg{ transform:scale(1.08); }
   .nav-item.active{ color:var(--text); background: linear-gradient(180deg, rgba(124,92,255,0.22), rgba(124,92,255,0.06));
     box-shadow: inset 0 0 0 1px rgba(124,92,255,0.35), 0 4px 16px rgba(124,92,255,0.18); }
   .nav-item.active::before{ content:''; position:absolute; left:-11px; top:50%; transform:translateY(-50%);
     width:3px; height:16px; border-radius:3px; background:var(--purple); box-shadow:0 0 10px var(--purple); }
-  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:10px; width:100%; padding-top:14px; border-top:1px solid var(--border-soft); }
-  .avatar{ width:36px; height:36px; border-radius:11px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
-    display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#0c0a06; }
-  .sidebar-footer .role{ font-size:8.5px; color:var(--text-faint); text-align:center; line-height:1.3; }
+  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:6px; width:100%; padding-top:8px; border-top:1px solid var(--border-soft); }
+  .avatar{ width:30px; height:30px; border-radius:9px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
+    display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#0c0a06; }
+  .sidebar-footer .role{ font-size:7.5px; color:var(--text-faint); text-align:center; line-height:1.2; }
   .logout-btn{ color:var(--text-faint); cursor:pointer; padding:6px; border-radius:8px; transition:.2s;}
   .logout-btn:hover{ color:var(--error); background:rgba(248,113,113,0.08); }
   .logout-btn svg{ width:16px; height:16px; }
@@ -2450,9 +2481,9 @@ body.essence-authed #authGate{ display:none; }
   width:100%; max-width:380px; padding:36px 32px; border-radius:var(--radius-lg);
   background:var(--card); border:1px solid var(--border); box-shadow:0 20px 60px var(--shadow-color);
 }
-#authGate .auth-brand{ display:flex; align-items:center; gap:10px; margin-bottom:26px; }
-#authGate .auth-brand svg{ width:26px; height:26px; color:var(--gold); }
-#authGate .auth-brand span{ font-size:18px; font-weight:700; letter-spacing:.2px; color:var(--text); }
+#authGate .auth-brand{ display:flex; align-items:center; justify-content:center; text-align:center; margin-bottom:30px; }
+#authGate .auth-brand-name{ font-family:'Cormorant Garamond', 'Inter', serif; font-size:23px; font-weight:600;
+  letter-spacing:3.5px; line-height:1.35; color:var(--gold); text-transform:uppercase; }
 #authGate h1{ font-size:21px; font-weight:700; margin:0 0 6px; color:var(--text); }
 #authGate p.auth-sub{ color:var(--text-dim); font-size:13.5px; margin:0 0 24px; line-height:1.5; }
 #authGate label{ display:block; font-size:12.5px; color:var(--text-dim); margin-bottom:6px; font-weight:500; }
@@ -2472,8 +2503,7 @@ body.essence-authed #authGate{ display:none; }
 
 @media (max-width: 1000px){
   .app-shell{ grid-template-columns: 76px 1fr !important; gap:10px !important; padding:10px !important; }
-  .sidebar{ padding:16px 0 12px !important; overflow-y:auto !important; -webkit-overflow-scrolling:touch !important; scrollbar-width:none !important; }
-  .sidebar::-webkit-scrollbar{ display:none !important; }
+  .sidebar{ padding:16px 0 12px !important; }
   .nav-item{ width:52px !important; }
 
   /* POS: الكارت وCategory: قائمة الفئات — bقاو كيفرضو عرض ثابت
@@ -2526,22 +2556,6 @@ body.essence-authed #authGate{ display:none; }
 
 /* ---------- ≤600px: موبايل ---------- */
 @media (max-width: 600px){
-  /* ⚠️ إصلاح: .sidebar (النافبار العمودي) كان بلا overflow — إذا الأقسام (Home/POS/Products/
-     Stock/Sales/Debts/Suppliers/Expenses/Reports/Analytics/Settings) ماكانوش داخلين كاملين فـ
-     ارتفاع الشاشة (شائع على الهاتف، خصوصا لما يبان keyboard/browser chrome)، الأقسام الأخيرة
-     كانت كتخرج برا الشاشة بلا حتى طريقة توصلها — ماكانش scroll ولا drag. دابا سكرولابل عمودي،
-     بلا ما يبين scrollbar (نفس نمط .chips-row). */
-  .sidebar{ overflow-y:auto !important; -webkit-overflow-scrolling:touch !important; scrollbar-width:none !important; }
-  .sidebar::-webkit-scrollbar{ display:none !important; }
-  .nav-list{ flex-shrink:0 !important; }
-
-  /* الواجهة كانت شوية صغيرة/مضغوطة على الهاتف — تكبير بسيط للعناصر الأكثر استعمال */
-  .nav-item{ width:48px !important; padding:9px 0 7px !important; }
-  .nav-item svg{ width:21px !important; height:21px !important; }
-  .p-name{ font-size:13px !important; }
-  .p-price{ font-size:14px !important; }
-  .btn-primary, .btn-secondary, .checkout-btn{ font-size:13.5px !important; }
-
   .app-shell{ grid-template-columns: 60px 1fr !important; }
   .nav-item{ width:44px !important; padding:7px 0 6px !important; }
   .nav-item span{ display:none; } /* غير الأيقونة، بلا تسمية، باش توفر مكان */
@@ -2563,13 +2577,18 @@ body.essence-authed #authGate{ display:none; }
 /* ===== فاتورة/إيصال حقيقي قابل للطباعة (مخفي على الشاشة، يبان غير عند الطباعة) ===== */
 #receiptPrintArea{ display:none; }
 @media print{
+  /* ⚠️ مصلح: ماكانش كاين @page أصلا — الطباعة كانت كتخرج بمقاس الورقة الافتراضي ديال المتصفح
+     (A4/Letter عادة) بلا ما تتظبط فعليا لطابعة 80mm الحرارية. دابا @page مضبوطة بالضبط لـ80mm،
+     و.receipt-box بـmm حقيقية (72mm عرض الطباعة داخل رول 80mm، نفس المعيار المتبع فطابعات POS) بدل px. */
+  @page{ size: 80mm auto; margin: 0; }
   body > *:not(#receiptPrintArea){ display:none !important; }
   #receiptPrintArea{
     display:block !important; position:static !important; inset:auto !important;
     background:#fff !important; color:#111 !important; padding:0; margin:0;
+    width:80mm !important;
   }
   .receipt-box{
-    width:300px; margin:0 auto; font-family:'JetBrains Mono', monospace; font-size:12px; color:#111;
+    width:72mm; margin:0 auto; font-family:'JetBrains Mono', monospace; font-size:11px; color:#111;
   }
   .receipt-store{ font-size:15px; font-weight:800; text-align:center; }
   .receipt-sub{ font-size:10.5px; text-align:center; color:#444; margin-bottom:6px; }
@@ -2599,6 +2618,47 @@ body.essence-authed #authGate{ display:none; }
 .img-upload-actions{ display:flex; flex-direction:column; gap:6px; }
 .img-upload-actions .upload-btn{ height:32px; padding:0 12px; font-size:11.5px; }
 .img-upload-hint{ font-size:10px; color:var(--text-faint); margin-top:2px; }
+
+/* ===== MOBILE (≤600px): نفس تصميم الحاسوب بالضبط (نفس الألوان/الكروت/التخطيط) — غير:
+   1) السايدبار (.sidebar) كيتحول لـ bar سفلي أفقي (بحال تطبيقات الهاتف) بدل عمود يسار
+   2) النص عموما شوية أصغر (zoom مضبوط على منطقة المحتوى)
+   جاي فالأخير فالـ <style> عمدا (آخر تعريف كيربح، نفس القاعدة المتبعة فباقي الملف) باش يقدر
+   يبدل .sidebar/.nav-item/.app-shell الأصليين بلا ما نبحثو على كل نسخة مكررة منهم فالملف. ===== */
+@media (max-width: 600px){
+  .app-shell{
+    display:grid !important; grid-template-columns:1fr !important; grid-template-rows:1fr auto !important;
+    height:100vh !important; padding:8px !important; gap:8px !important;
+  }
+  .main-col-outer{ order:1; overflow:hidden !important; zoom:0.94; }
+
+  /* السايدبار → bar سفلي أفقي، scrollable إذا ماكفاش المكان لكل الأزرار */
+  .sidebar{
+    order:2; flex-direction:row !important; align-items:center !important;
+    width:100% !important; height:auto !important; padding:6px 8px !important;
+    border-radius: var(--radius-md) !important; overflow-x:auto; -webkit-overflow-scrolling:touch;
+  }
+  .sidebar .brand{ display:none !important; } /* لا داعي للوغو الكبير فبار ضيق سفلي */
+  .nav-list{
+    flex-direction:row !important; width:auto !important; flex:1 !important; gap:2px !important;
+    align-items:center !important;
+    /* ⚠️ مصلح: القاعدة الأصلية ديال .nav-list (ديال السايدبار ديال الحاسوب) دابا فيها
+       overflow-y:auto + overflow-x:hidden (باش السايدبار يتسع بلا ما يبان مقطوع) — هنا فالهاتف
+       .nav-list كيصير أفقي وخاصو يفيض بره باش .sidebar الأب هو لي يدير scroll أفقي، فـoverflow-x:hidden
+       الموروثة كانت كتقطع/كتمنع الحركة أصلا. overflow:visible هنا كيرجع تصرفها للأب (.sidebar). */
+    overflow:visible !important;
+  }
+  .nav-item{
+    width:auto !important; min-width:46px; flex-shrink:0; padding:6px 5px 5px !important;
+  }
+  .nav-item span{ display:block !important; font-size:8px !important; } /* كانت مخبية قبل، دابا بانة بحجم صغير */
+  .nav-item.active::before{ display:none; } /* الخط الجانبي ديال active ماخدامش أفقي، نخبيوه */
+  .sidebar-footer{
+    flex-direction:row !important; width:auto !important; padding:0 0 0 8px !important;
+    border-top:none !important; border-left:1px solid var(--border-soft); margin-left:6px; gap:6px !important;
+  }
+  .sidebar-footer .role{ display:none !important; } /* بلا مكان كافي فبار سفلي ضيق */
+  #sidebar_userName{ display:none !important; }
+}
 </style>
 </head>
 <body>
@@ -2656,7 +2716,7 @@ body.essence-authed #authGate{ display:none; }
 <div id="authGate">
   <div class="auth-loading" id="authGate_loading">…</div>
   <form class="auth-card" id="authGate_form" style="display:none;">
-    <div class="auth-brand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v6M9 8h6l1.5 3.5a5 5 0 11-9 0z"/></svg><span>Essence</span></div>
+    <div class="auth-brand"><span class="auth-brand-name">PLATINIUM<br>PARFUMERIE</span></div>
     <h1 data-i18n="auth.title">Sign in</h1>
     <p class="auth-sub" data-i18n="auth.subtitle">Enter your store account to continue</p>
     <label for="authGate_email" data-i18n="auth.email">Email</label>
@@ -2742,7 +2802,8 @@ body.essence-authed #authGate{ display:none; }
 
 <div class="app-shell">
   <aside class="sidebar glass">
-    <div class="brand"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M12 2v6M9 8h6l1.5 3.5a5 5 0 11-9 0z"/></svg></div>
+    <div class="brand" id="sidebar_logoBtn" title="Add your logo" data-i18n-title="sidebar.addLogo" style="cursor:pointer;"></div>
+    <input type="file" id="sidebar_logoInput" accept="image/*" style="display:none;"/>
     <nav class="nav-list">
       <div class="nav-item active" data-page="home"><i data-lucide="layout-dashboard"></i><span data-i18n="nav.home">Home</span></div>
       <div class="nav-item" data-page="pos"><i data-lucide="shopping-bag"></i><span data-i18n="nav.pos">POS</span></div>
@@ -2769,7 +2830,7 @@ body.essence-authed #authGate{ display:none; }
 <div class="main-col">
 <header class="topbar glass">
 <div class="search-box"><i data-lucide="search"></i><input id="home_globalSearchInput" autocomplete="off" placeholder="Search products, invoices, debtors…" data-i18n-placeholder="topbar.searchPlaceholder" type="text"/></div>
-<div class="icon-btn" id="home_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
+<div class="icon-btn sync-now-btn" id="home_syncNowBtn" title="Sync now" data-i18n-title="topbar.syncNow"><i data-lucide="refresh-cw"></i></div><div class="icon-btn" id="home_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
 <div class="icon-btn notif-bell" title="Notifications" data-i18n-title="topbar.notifications"><i data-lucide="bell"></i><div class="dot"></div></div>
 <div class="spacer"></div>
 <button class="btn-primary" onclick="goToPage('pos')"><i data-lucide="plus"></i><span data-i18n="home.newSale">New Sale</span></button>
@@ -2777,8 +2838,8 @@ body.essence-authed #authGate{ display:none; }
 <div class="content-scroll">
 <div class="hero-banner">
 <div>
-<div class="eyebrow" id="home_heroEyebrow">Friday, 10 July 2026 · Downtown Branch</div>
-<h2 id="home_heroGreeting" data-i18n="home.heroGreeting">Good afternoon, Rania 👋</h2>
+<div class="eyebrow" id="home_heroEyebrow">—</div>
+<h2 id="home_heroGreeting">👋</h2>
 <p id="home_heroLine">You've made <b style="color:var(--text);">2,140 دج</b> today across 18 sales. Store is trending <b style="color:var(--success);">+6.2%</b> above yesterday.</p>
 </div>
 <div class="hero-icon"><i data-lucide="sparkles"></i></div>
@@ -2896,7 +2957,7 @@ body.essence-authed #authGate{ display:none; }
 <i data-lucide="chevron-down"></i>
 </div>
 <div class="icon-btn" id="pos_langBtn" title="Language" data-i18n-title="common.language"><i data-lucide="globe"></i></div>
-<div class="icon-btn" id="pos_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
+<div class="icon-btn sync-now-btn" id="pos_syncNowBtn" title="Sync now" data-i18n-title="topbar.syncNow"><i data-lucide="refresh-cw"></i></div><div class="icon-btn" id="pos_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
 <div class="icon-btn notif-bell" title="Notifications" data-i18n-title="topbar.notifications"><i data-lucide="bell"></i><div class="dot"></div></div>
 <button class="btn-primary btn-secondary" id="pos_addClientBtn"><i data-lucide="user-plus"></i><span data-i18n="pos.addClient">Add Client</span></button>
 <button class="btn-primary" id="pos_quickActionsBtn"><i data-lucide="zap"></i><span data-i18n="pos.quickActions">Quick Actions</span></button>
@@ -2904,7 +2965,7 @@ body.essence-authed #authGate{ display:none; }
 <div class="content-row">
 <!-- PRODUCT AREA -->
 <main class="product-area">
-<div class="chips-row" id="pos_chipsRow"></div>
+<div class="chips-row" id="pos_catChips"></div>
 <div class="product-scroll">
 <div class="product-grid" id="pos_productGrid"></div>
 </div>
@@ -3004,7 +3065,7 @@ body.essence-authed #authGate{ display:none; }
 <div class="icon-btn" id="products_importBtn" title="Import" data-i18n-title="products.import"><i data-lucide="upload"></i></div>
 <input accept=".csv" id="products_importInput" style="display:none;" type="file"/>
 <div class="icon-btn" id="products_exportBtn" title="Export" data-i18n-title="products.export"><i data-lucide="download"></i></div>
-<div class="icon-btn" id="products_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
+<div class="icon-btn sync-now-btn" id="products_syncNowBtn" title="Sync now" data-i18n-title="topbar.syncNow"><i data-lucide="refresh-cw"></i></div><div class="icon-btn" id="products_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
 <div class="icon-btn notif-bell" title="Notifications" data-i18n-title="topbar.notifications"><i data-lucide="bell"></i><div class="dot"></div></div>
 <div class="spacer"></div>
 <button class="btn-primary" id="products_openDrawer"><i data-lucide="plus"></i><span data-i18n="products.addProduct">Add Product</span></button>
@@ -3216,7 +3277,7 @@ body.essence-authed #authGate{ display:none; }
 <div class="main-col">
 <header class="topbar glass">
 <div class="search-box"><i data-lucide="search"></i><input id="category_searchInput" data-i18n-placeholder="category.searchPlaceholder" placeholder="Search categories or brands…" type="text"/></div>
-<div class="icon-btn" id="category_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
+<div class="icon-btn sync-now-btn" id="category_syncNowBtn" title="Sync now" data-i18n-title="topbar.syncNow"><i data-lucide="refresh-cw"></i></div><div class="icon-btn" id="category_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
 <div class="icon-btn notif-bell" title="Notifications" data-i18n-title="topbar.notifications"><i data-lucide="bell"></i><div class="dot"></div></div>
 <div class="spacer"></div>
 <button class="btn-primary" id="category_addCategoryBtnTop"><i data-lucide="plus"></i><span data-i18n="category.addCategory">Add Category</span></button>
@@ -3290,7 +3351,7 @@ body.essence-authed #authGate{ display:none; }
 <div class="main-col">
 <header class="topbar glass">
 <div class="search-box"><i data-lucide="search"></i><input id="suppliers_searchInput" placeholder="Search supplier name, contact, phone…" data-i18n-placeholder="suppliers.searchPlaceholder" type="text"/></div>
-<div class="icon-btn" id="suppliers_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
+<div class="icon-btn sync-now-btn" id="suppliers_syncNowBtn" title="Sync now" data-i18n-title="topbar.syncNow"><i data-lucide="refresh-cw"></i></div><div class="icon-btn" id="suppliers_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
 <div class="icon-btn notif-bell" title="Notifications" data-i18n-title="topbar.notifications"><i data-lucide="bell"></i><div class="dot"></div></div>
 <div class="spacer"></div>
 <button class="btn-primary" id="suppliers_openDrawer"><i data-lucide="plus"></i><span data-i18n="suppliers.addSupplier">Add Supplier</span></button>
@@ -3401,7 +3462,7 @@ body.essence-authed #authGate{ display:none; }
 <div class="main-col">
 <header class="topbar glass">
 <div class="search-box"><i data-lucide="search"></i><input id="debts_searchInput" placeholder="Search debtor name or phone…" data-i18n-placeholder="debts.searchPlaceholder" type="text"/></div>
-<div class="icon-btn" id="debts_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
+<div class="icon-btn sync-now-btn" id="debts_syncNowBtn" title="Sync now" data-i18n-title="topbar.syncNow"><i data-lucide="refresh-cw"></i></div><div class="icon-btn" id="debts_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
 <div class="icon-btn notif-bell" title="Notifications" data-i18n-title="topbar.notifications"><i data-lucide="bell"></i><div class="dot"></div></div>
 <div class="spacer"></div>
 <button class="btn-primary" id="debts_openAddDebtor"><i data-lucide="user-plus"></i><span data-i18n="debts.addDebtor">Add Debtor</span></button>
@@ -3490,7 +3551,7 @@ body.essence-authed #authGate{ display:none; }
 <header class="topbar glass">
 <div class="search-box"><i data-lucide="search"></i><input id="sales_searchInput" placeholder="Search invoice #, customer…" data-i18n-placeholder="sales.searchPlaceholder" type="text"/></div>
 <div class="icon-btn" id="sales_exportBtn" title="Export" data-i18n-title="common.export"><i data-lucide="download"></i></div>
-<div class="icon-btn" id="sales_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
+<div class="icon-btn sync-now-btn" id="sales_syncNowBtn" title="Sync now" data-i18n-title="topbar.syncNow"><i data-lucide="refresh-cw"></i></div><div class="icon-btn" id="sales_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
 <div class="icon-btn notif-bell" title="Notifications" data-i18n-title="topbar.notifications"><i data-lucide="bell"></i><div class="dot"></div></div>
 <div class="spacer"></div>
 <a class="btn-primary btn-secondary" href="#" onclick="goToPage('reports'); return false;" style="text-decoration:none;"><i data-lucide="bar-chart-3"></i><span data-i18n="sales.viewReports">View Reports</span></a>
@@ -3579,7 +3640,7 @@ body.essence-authed #authGate{ display:none; }
 <div class="icon-btn" id="stock_topScanBtn" title="Scan barcode" data-i18n-title="pos.scanBarcode"><i data-lucide="scan-line"></i></div>
 <div class="topbar-divider"></div>
 <div class="icon-btn" title="Export" id="stock_exportBtn" data-i18n-title="common.export"><i data-lucide="download"></i></div>
-<div class="icon-btn" id="stock_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
+<div class="icon-btn sync-now-btn" id="stock_syncNowBtn" title="Sync now" data-i18n-title="topbar.syncNow"><i data-lucide="refresh-cw"></i></div><div class="icon-btn" id="stock_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
 <div class="icon-btn notif-bell" title="Notifications" data-i18n-title="topbar.notifications"><i data-lucide="bell"></i><div class="dot"></div></div>
 <div class="spacer"></div>
 <button class="btn-primary" id="stock_openDrawer"><i data-lucide="plus"></i><span data-i18n="stock.recordMovement">Record Movement</span></button>
@@ -3730,7 +3791,7 @@ body.essence-authed #authGate{ display:none; }
 <div class="main-col">
 <header class="topbar glass">
 <div class="search-box"><i data-lucide="search"></i><input id="expenses_searchInput" placeholder="Search expenses…" data-i18n-placeholder="expenses.searchPlaceholder" type="text"/></div>
-<div class="icon-btn" id="expenses_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
+<div class="icon-btn sync-now-btn" id="expenses_syncNowBtn" title="Sync now" data-i18n-title="topbar.syncNow"><i data-lucide="refresh-cw"></i></div><div class="icon-btn" id="expenses_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
 <div class="icon-btn notif-bell" title="Notifications" data-i18n-title="topbar.notifications"><i data-lucide="bell"></i><div class="dot"></div></div>
 <div class="spacer"></div>
 <button class="btn-primary" id="expenses_openDrawer"><i data-lucide="plus"></i><span data-i18n="expenses.addExpense">Add Expense</span></button>
@@ -3785,7 +3846,7 @@ body.essence-authed #authGate{ display:none; }
 </div>
 <div class="drawer-body">
 <div class="amount-input-wrap">
-<span class="cur">دج</span>
+<span class="cur" id="expenses_amountCur">دج</span>
 <input class="amount-input" id="expenses_amountInput" placeholder="0.00" type="number"/>
 </div>
 <div class="field">
@@ -3829,7 +3890,7 @@ body.essence-authed #authGate{ display:none; }
 <span style="font-size:12.5px; color:var(--text-dim);">Friday, 10 July 2026</span>
 </div>
 <div class="spacer"></div>
-<div class="icon-btn" id="reports_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
+<div class="icon-btn sync-now-btn" id="reports_syncNowBtn" title="Sync now" data-i18n-title="topbar.syncNow"><i data-lucide="refresh-cw"></i></div><div class="icon-btn" id="reports_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
 <div class="icon-btn notif-bell" title="Notifications" data-i18n-title="topbar.notifications"><i data-lucide="bell"></i><div class="dot"></div></div>
 <button class="btn-primary" id="reports_exportPdfBtn"><i data-lucide="download"></i><span data-i18n="reports.exportPdf">Export PDF</span></button>
 </header>
@@ -3849,16 +3910,25 @@ body.essence-authed #authGate{ display:none; }
 <div class="stat-top"><div class="stat-icon red"><i data-lucide="wallet"></i></div><span class="stat-trend down" id="reports_todayExpensesTrend">+3.1%</span></div>
 <div class="stat-value" id="reports_todayExpenses">0 دج</div><div class="stat-label" data-i18n="reports.todayExpenses">Today's Expenses</div>
 </div>
-<div class="stat-card">
+<div class="stat-card" id="reports_profitCard">
 <div class="stat-top"><div class="stat-icon gold"><i data-lucide="trending-up"></i></div><span class="stat-trend up" id="reports_todayProfitTrend">+9.4%</span></div>
 <div class="stat-value" id="reports_todayProfit">0 دج</div><div class="stat-label" data-i18n="reports.profitGross">Profit (Gross)</div>
 </div>
-<div class="stat-card">
+<div class="stat-card" id="reports_netProfitCard">
 <div class="stat-top"><div class="stat-icon green"><i data-lucide="piggy-bank"></i></div><span class="stat-trend up" id="reports_todayNetProfitTrend">+7.8%</span></div>
 <div class="stat-value" id="reports_todayNetProfit">0 دج</div><div class="stat-label" data-i18n="reports.netProfit">Net Profit</div>
 </div>
+<!-- كاشير بوحدو: بديل بلا cost/margin — عدد حركات اليوم + المبلغ بعد المصاريف (بلا ربح/تكلفة) -->
+<div class="stat-card" id="reports_todayTxnCard" style="display:none;">
+<div class="stat-top"><div class="stat-icon gold"><i data-lucide="activity"></i></div></div>
+<div class="stat-value" id="reports_todayTxnCount">0</div><div class="stat-label" data-i18n="reports.todayMovements">Today's Movements</div>
 </div>
-<div class="stat-row" style="grid-template-columns:1fr; margin-bottom:14px;">
+<div class="stat-card" id="reports_todayNetSimpleCard" style="display:none;">
+<div class="stat-top"><div class="stat-icon green"><i data-lucide="piggy-bank"></i></div></div>
+<div class="stat-value" id="reports_todayNetSimple">0 دج</div><div class="stat-label" data-i18n="reports.todayAfterExpenses">Total After Expenses</div>
+</div>
+</div>
+<div class="stat-row" style="grid-template-columns:1fr; margin-bottom:14px;" id="reports_capitalRow">
 <div class="stat-card" style="display:flex; align-items:center; justify-content:space-between; cursor:default; gap:14px; flex-wrap:wrap;">
 <div>
 <div class="stat-top"><div class="stat-icon gold"><i data-lucide="wallet"></i></div></div>
@@ -3870,7 +3940,7 @@ body.essence-authed #authGate{ display:none; }
 </button>
 </div>
 </div>
-<div class="panel" style="margin-bottom:14px;">
+<div class="panel" style="margin-bottom:14px;" id="reports_periodPanel">
 <div class="panel-title-row">
 <div><h3 data-i18n="reports.periodPanelTitle">Income, Expenses &amp; Profit by Period</h3><p data-i18n="reports.periodPanelSub">Same breakdown — choose the period you want to review</p></div>
 <div class="range-chips" id="reports_periodChips">
@@ -3882,7 +3952,7 @@ body.essence-authed #authGate{ display:none; }
 </div>
 <div class="period-stat-row" id="reports_periodStatRow"></div>
 </div>
-<div class="grid-row cols-7-5">
+<div class="grid-row cols-7-5" id="reports_chartsRow">
 <!-- Sales trend chart -->
 <div class="panel">
 <div class="panel-title-row">
@@ -3904,13 +3974,13 @@ body.essence-authed #authGate{ display:none; }
 <div class="donut-wrap">
 <div class="donut-center">
 <svg height="180" id="reports_donutChart" viewbox="0 0 180 180" width="180"></svg>
-<div class="donut-label"><div class="pct" id="reports_donutPct">0%</div><div class="lbl" data-i18n="reports.blendedMargin">Blended Margin</div></div>
+<div class="donut-label"><div class="pct">39.7%</div><div class="lbl" data-i18n="reports.blendedMargin">Blended Margin</div></div>
 </div>
 <div class="donut-legend" id="reports_donutLegend"></div>
 </div>
 </div>
 </div>
-<div class="grid-row cols-2">
+<div class="grid-row cols-2" id="reports_topMoversRow">
 <!-- Top products -->
 <div class="panel">
 <div class="panel-title-row"><div><h3 data-i18n="reports.topProducts">Top Products</h3><p data-i18n="reports.rankedByRevenue">Ranked by revenue this period</p></div></div>
@@ -3922,7 +3992,7 @@ body.essence-authed #authGate{ display:none; }
 <div id="reports_topBrands"></div>
 </div>
 </div>
-<div class="grid-row" style="grid-template-columns:1fr; margin-bottom:20px;">
+<div class="grid-row" style="grid-template-columns:1fr; margin-bottom:20px;" id="reports_marginRow">
 <div class="panel">
 <div class="panel-title-row"><div><h3 data-i18n="reports.marginBreakdown">Margin Breakdown by Category</h3><p data-i18n="reports.marginBreakdownSub">Purchase cost vs. revenue vs. profit</p></div></div>
 <table class="margin-table">
@@ -3970,7 +4040,7 @@ body.essence-authed #authGate{ display:none; }
 <span style="font-size:12.5px; color:var(--text-dim);" data-i18n="analytics.allBranches">All Branches</span>
 </div>
 <div class="spacer"></div>
-<div class="icon-btn" id="analytics_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
+<div class="icon-btn sync-now-btn" id="analytics_syncNowBtn" title="Sync now" data-i18n-title="topbar.syncNow"><i data-lucide="refresh-cw"></i></div><div class="icon-btn" id="analytics_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
 <div class="icon-btn notif-bell" title="Notifications" data-i18n-title="topbar.notifications"><i data-lucide="bell"></i><div class="dot"></div></div>
 <button class="btn-primary" id="analytics_exportPdfBtn"><i data-lucide="download"></i><span data-i18n="analytics.exportPdf">Export PDF</span></button>
 </header>
@@ -4021,7 +4091,7 @@ body.essence-authed #authGate{ display:none; }
 <div class="donut-wrap">
 <div class="donut-center">
 <svg height="180" id="analytics_payDonut" viewbox="0 0 180 180" width="180"></svg>
-<div class="donut-label"><div class="pct" id="analytics_payDonutPct">0</div><div class="lbl" data-i18n="analytics.transactions">Transactions</div></div>
+<div class="donut-label"><div class="pct">412</div><div class="lbl" data-i18n="analytics.transactions">Transactions</div></div>
 </div>
 <div class="donut-legend" id="analytics_payLegend"></div>
 </div>
@@ -4067,7 +4137,7 @@ body.essence-authed #authGate{ display:none; }
 <span style="font-size:12.5px; color:var(--text-dim);" data-i18n="settings.topbarSub">Manage your store, branches, team and preferences</span>
 </div>
 <div class="spacer"></div>
-<div class="icon-btn" id="settings_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
+<div class="icon-btn sync-now-btn" id="settings_syncNowBtn" title="Sync now" data-i18n-title="topbar.syncNow"><i data-lucide="refresh-cw"></i></div><div class="icon-btn" id="settings_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
 <span id="settings_dirtyBadge" style="display:none; font-size:11px; color:var(--gold); background:var(--gold-dim); padding:5px 10px; border-radius:20px; margin-right:8px; white-space:nowrap;" data-i18n="settings.unsavedChanges">● Unsaved changes</span>
 <button class="btn-primary" id="settings_saveTop"><i data-lucide="check"></i><span data-i18n="common.saveChanges">Save Changes</span></button>
 </header>
@@ -4075,7 +4145,12 @@ body.essence-authed #authGate{ display:none; }
 <nav class="settings-nav glass">
 <div class="set-nav-item active" data-sec="store"><i data-lucide="store"></i><span data-i18n="settings.navStore">Store Info</span></div>
 <div class="set-nav-item" data-sec="branches"><i data-lucide="building-2"></i><span data-i18n="settings.navBranches">Branches</span></div>
-<div class="set-nav-item" data-sec="team"><i data-lucide="users"></i><span data-i18n="settings.navTeam">Team &amp; Roles</span></div>
+<div class="set-nav-item" data-sec="team" style="display:none;"><i data-lucide="users"></i><span data-i18n="settings.navTeam">Team &amp; Roles</span></div>
+<!-- ⚠️ مخبية عمدا: هاد الصفحة كانت ديمو محلي بالكامل (AppState.team فـ localStorage)، بلا أي علاقة
+     حقيقية بـ store_members/auth.users فـ Supabase — تعديل الدور منها ماكان كيبدل حتى صلاحية فعلية.
+     القرار: التعامل مع الفريق/الأدوار الحقيقي يدويا عبر Supabase Auth Dashboard كافي لدابا، بلا
+     حاجة لـ Edge Function. الكود ديال الصفحة باقي فالملف (بلا مس) تحسبا لقرار مستقبلي، غير
+     مخبية من التنقل. -->
 <div class="set-nav-item" data-sec="payments"><i data-lucide="credit-card"></i><span data-i18n="settings.navPayments">Payment Methods</span></div>
 <div class="set-nav-item" data-sec="receipts"><i data-lucide="printer"></i><span data-i18n="settings.navReceipts">Receipts &amp; Printing</span></div>
 <div class="set-nav-item" data-sec="notifications"><i data-lucide="bell"></i><span data-i18n="settings.navNotifications">Notifications</span></div>
@@ -4089,29 +4164,19 @@ body.essence-authed #authGate{ display:none; }
 <div class="panel">
 <div class="panel-title-row"><div><h3 data-i18n="settings.storeIdentityTitle">Store Identity</h3><p data-i18n="settings.storeIdentitySub">Shown on receipts, invoices and the topbar</p></div></div>
 <div class="logo-uploader">
-<div class="logo-preview" id="settings_logoPreview"><svg fill="none" stroke-linecap="round" stroke-width="2" viewbox="0 0 24 24"><path d="M12 2v6M9 8h6l1.5 3.5a5 5 0 11-9 0z"></path></svg></div>
+<div class="logo-preview" id="settings_logoPreview"></div>
 <button class="upload-btn" id="settings_uploadLogoBtn"><i data-lucide="image-plus"></i><span data-i18n="settings.uploadLogo">Upload New Logo</span></button>
 <input type="file" id="settings_logoInput" accept="image/*" style="display:none;"/>
 </div>
 <div class="field"><label data-i18n="settings.storeNameLabel">Store Name</label><input type="text" id="settings_storeName" value="Essence — Luxury Perfumes"/></div>
 <div class="field-row">
-<div class="field"><label data-i18n="settings.currencyLabel">Currency</label><select id="settings_currency">
-  <option value="DZD">DZD — دج (دينار جزائري)</option>
-  <option value="USD">USD — $ (US Dollar)</option>
-  <option value="EUR">EUR — € (Euro)</option>
-  <option value="MAD">MAD — د.م. (Moroccan Dirham)</option>
-  <option value="TND">TND — د.ت (Tunisian Dinar)</option>
-  <option value="EGP">EGP — ج.م (Egyptian Pound)</option>
-  <option value="SAR">SAR — ر.س (Saudi Riyal)</option>
-  <option value="AED">AED — د.إ (UAE Dirham)</option>
-  <option value="GBP">GBP — £ (British Pound)</option>
-</select></div>
+<div class="field"><label data-i18n="settings.currencyLabel">Currency</label><select id="settings_currency"><option>دج</option><option>DZD</option><option>DA</option></select></div>
 <div class="field"><label data-i18n="settings.taxRateLabel">Tax Rate (%)</label><input type="number" id="settings_taxRate" value="0"/></div>
 </div>
-<div class="field"><label data-i18n="settings.addressLabel">Business Address</label><input type="text" id="settings_address" placeholder="e.g. Al Baraka Mall, Downtown, 3rd Floor"/></div>
+<div class="field"><label data-i18n="settings.addressLabel">Business Address</label><input type="text" id="settings_address" value="Al Baraka Mall, Downtown, 3rd Floor"/></div>
 <div class="field-row">
-<div class="field"><label data-i18n="settings.phoneLabel">Phone</label><input type="text" id="settings_phone" placeholder="e.g. +213 555 000 000"/></div>
-<div class="field"><label data-i18n="settings.emailLabel">Email</label><input type="text" id="settings_email" placeholder="e.g. hello@yourstore.com"/></div>
+<div class="field"><label data-i18n="settings.phoneLabel">Phone</label><input type="text" id="settings_phone" value="+971 4 555 0192"/></div>
+<div class="field"><label data-i18n="settings.emailLabel">Email</label><input type="text" id="settings_email" value="hello@essence-perfumes.com"/></div>
 </div>
 </div>
 </section>
@@ -4170,11 +4235,7 @@ body.essence-authed #authGate{ display:none; }
 <div class="toggle-row"><div class="toggle-info"><div class="t-name" data-i18n="settings.lowStockAlertsTitle">Low stock alerts</div><div class="t-sub" data-i18n="settings.lowStockAlertsSub">When a product drops to its threshold</div></div><div class="switch on" data-t="4"></div></div>
 <div class="toggle-row"><div class="toggle-info"><div class="t-name" data-i18n="settings.newDebtTitle">New debt / credit sale</div><div class="t-sub" data-i18n="settings.newDebtSub">When a sale is made on credit or split</div></div><div class="switch on" data-t="5"></div></div>
 <div class="toggle-row"><div class="toggle-info"><div class="t-name" data-i18n="settings.dailySummaryTitle">Daily summary email</div><div class="t-sub" data-i18n="settings.dailySummarySub">Sent every night at closing time</div></div><div class="switch" data-t="6"></div></div>
-<div class="toggle-row"><div class="toggle-info"><div class="t-name" data-i18n="settings.largeExpenseTitle">Large expense flag</div><div class="t-sub" id="settings_largeExpenseSub">Notify when an expense exceeds 500 دج</div></div>
-<div style="display:flex; align-items:center; gap:10px;">
-<input type="number" id="settings_largeExpenseThreshold" min="0" step="1" style="width:90px; height:32px; padding:0 8px; border-radius:8px; border:1px solid var(--border); background:var(--bg-2); color:var(--text); font-size:12.5px;"/>
-<div class="switch on" data-t="7"></div>
-</div></div>
+<div class="toggle-row"><div class="toggle-info"><div class="t-name" data-i18n="settings.largeExpenseTitle">Large expense flag</div><div class="t-sub" id="settings_largeExpenseSub">Notify when an expense exceeds 500 دج</div><input type="number" id="settings_largeExpenseThreshold" min="0" step="1" style="margin-top:8px; width:120px;" value="500"/></div><div class="switch on" data-t="7"></div></div>
 </div>
 </section>
 <!-- APPEARANCE -->
@@ -4318,6 +4379,7 @@ const I18N = {
     'nav.category':'Category', 'nav.debts':'Debts', 'nav.sales':'Sales', 'nav.stock':'Stock',
     'nav.expenses':'Expenses', 'nav.reports':'Reports', 'nav.analytics':'Analytics', 'nav.settings':'Settings',
     'sidebar.role':'Store Manager',
+    'sidebar.addLogo':'Add your logo',
     'role.owner':'Owner', 'role.manager':'Manager', 'role.cashier':'Cashier',
     'auth.title':'Sign in', 'auth.subtitle':'Enter your store account to continue',
     'auth.email':'Email', 'auth.password':'Password', 'auth.signIn':'Sign in', 'auth.signingIn':'Signing in…',
@@ -4325,7 +4387,7 @@ const I18N = {
     'topbar.searchPlaceholder':'Search products, invoices, debtors…',
     'topbar.searchProducts':'Products', 'topbar.searchInvoices':'Invoices', 'topbar.searchDebtors':'Debtors',
     'topbar.searchNoResults':'No matches found.',
-    'topbar.toggleTheme':'Toggle theme', 'topbar.notifications':'Notifications',
+    'topbar.toggleTheme':'Toggle theme', 'topbar.notifications':'Notifications', 'topbar.syncNow':'Sync now',
     'sync.offline':"You're offline", 'sync.pending':'{n} change(s) waiting to sync',
     'sync.syncing':'Syncing…', 'sync.retryNow':'Retry now',
     'notif.markAllRead':'Mark all as read', 'notif.empty':'No notifications yet',
@@ -4389,8 +4451,8 @@ const I18N = {
     'products.addPaymentHint':"How you're paying for this product's starting stock — Cash deducts from your capital now, Credit adds to your balance with the supplier.",
     'products.restockInvalidCost':'Enter a valid unit cost (0 or more).',
     'products.restockSelectSupplierForCredit':'Select a supplier to buy on credit.',
-    'products.restockCashNote':'{amount} دج paid to supplier now.',
-    'products.restockCreditNote':"{amount} دج added to {supplier}'s balance.",
+    'products.restockCashNote':'{amount} ${window.__essenceCurrencySymbol()} paid to supplier now.',
+    'products.restockCreditNote':"{amount} ${window.__essenceCurrencySymbol()} added to {supplier}'s balance.",
     'capital.movementRestock':'Restock: {name} × {qty}',
     'capital.movementNewProduct':'New product: {name} × {qty}',
     'settings.language':'Language', 'settings.languageSub':'Choose the display language for the app',
@@ -4468,7 +4530,7 @@ const I18N = {
     'settings.lowStockAlertsTitle':'Low stock alerts', 'settings.lowStockAlertsSub':"When a product drops to its threshold",
     'settings.newDebtTitle':'New debt / credit sale', 'settings.newDebtSub':'When a sale is made on credit or split',
     'settings.dailySummaryTitle':'Daily summary email', 'settings.dailySummarySub':'Sent every night at closing time',
-    'settings.largeExpenseTitle':'Large expense flag', 'settings.largeExpenseSub':'Notify when an expense exceeds {amount} دج',
+    'settings.largeExpenseTitle':'Large expense flag', 'settings.largeExpenseSub':'Notify when an expense exceeds {amount} ${window.__essenceCurrencySymbol()}',
     'settings.themeTitle':'Theme', 'settings.themeDark':'Dark (default)', 'settings.themeLight':'Light',
     'settings.backupExportTitle':'Backup & Export', 'settings.backupExportSub':'Your data lives locally on this device via IndexedDB',
     'settings.autoBackupTitle':'Auto-backup daily', 'settings.autoBackupSub':'Save a local backup file every night',
@@ -4524,10 +4586,10 @@ const I18N = {
     'suppliers.colOwes':'Owes', 'suppliers.totalOwedBalance':'Total Owed to This Supplier',
     'suppliers.unpaidInvoices':'Unpaid / Partially Paid Purchases', 'suppliers.noInvoicesYet':'No purchase invoices yet.',
     'suppliers.recordPaymentLabel':'Record a Payment', 'suppliers.paymentPlaceholder':'Amount paid, e.g. 100',
-    'suppliers.recordPayment':'Record Payment', 'suppliers.paidLabel':'{amount} دج paid',
+    'suppliers.recordPayment':'Record Payment', 'suppliers.paidLabel':'{amount} ${window.__essenceCurrencySymbol()} paid',
     'suppliers.invalidPaymentAmount':'Enter a valid payment amount.',
-    'suppliers.amountExceedsBalance':'Amount exceeds what you owe this supplier ({amount} دج).',
-    'suppliers.paymentRecordedMsg':'Payment of {amount} دج recorded for {name}.',
+    'suppliers.amountExceedsBalance':'Amount exceeds what you owe this supplier ({amount} ${window.__essenceCurrencySymbol()}).',
+    'suppliers.paymentRecordedMsg':'Payment of {amount} ${window.__essenceCurrencySymbol()} recorded for {name}.',
     'capital.movementSupplierPayment':'Payment to supplier: {name}',
     'capital.movementReturn':'Return — Sale #{id}',
     'capital.movementSale':'Sale #{id}', 'capital.movementExpense':'Expense: {desc}',
@@ -4548,16 +4610,16 @@ const I18N = {
     'debts.totalOutstandingBalance':'Total Outstanding Balance', 'debts.unpaidInvoices':'Unpaid / Partially Paid Invoices',
     'debts.recordPaymentLabel':'Record a Payment', 'debts.paymentPlaceholder':'Amount received, e.g. 100',
     'debts.sendReminder':'Send Reminder', 'debts.recordPayment':'Record Payment',
-    'debts.paidLabel':'{amount} دج paid',
+    'debts.paidLabel':'{amount} ${window.__essenceCurrencySymbol()} paid',
     'debts.registerDebtor':'Register a customer buying on credit',
     'debts.fullNameLabel':'Full Name', 'debts.phoneNumberLabel':'Phone Number',
     'debts.initialDebtLabel':'Initial Debt Amount (optional)',
     'debts.hintPart1':'This debtor will also appear automatically at checkout whenever ',
     'debts.hintPart2':' or ', 'debts.hintPart3':' payment is used in POS.',
-    'debts.reminderSentMsg':'Reminder sent to {name} ({phone}) — outstanding balance {amount} دج.',
+    'debts.reminderSentMsg':'Reminder sent to {name} ({phone}) — outstanding balance {amount} ${window.__essenceCurrencySymbol()}.',
     'debts.invalidPaymentAmount':'Enter a valid payment amount.',
-    'debts.amountExceedsBalance':'Amount exceeds the outstanding balance of {amount} دج.',
-    'debts.paymentRecordedMsg':'Payment of {amount} دج recorded for {name}.',
+    'debts.amountExceedsBalance':'Amount exceeds the outstanding balance of {amount} ${window.__essenceCurrencySymbol()}.',
+    'debts.paymentRecordedMsg':'Payment of {amount} ${window.__essenceCurrencySymbol()} recorded for {name}.',
     'debts.pleaseEnterDebtorName':"Please enter the debtor's name.",
     'sales.title':'Sales', 'sales.subtitle':'Full history of every transaction across all registers',
     'sales.viewReports':'View Reports', 'sales.searchPlaceholder':'Search invoice #, customer…',
@@ -4583,7 +4645,7 @@ const I18N = {
     'sales.returnedMsgOne':'Invoice #{id} returned. Stock restored for {n} item.',
     'sales.returnedMsgOther':'Invoice #{id} returned. Stock restored for {n} items.',
     'sales.printTitle':'Print', 'sales.viewTitle':'View',
-    'sales.debtReducedMsg':' {amount} دج removed from {name}\'s outstanding balance.',
+    'sales.debtReducedMsg':' {amount} ${window.__essenceCurrencySymbol()} removed from {name}\'s outstanding balance.',
     'sales.stockReturnReason':'Returned — Sales #{id}',
     'receipt.walkInCustomer':'Walk-in Customer', 'receipt.invoiceLabel':'Invoice', 'receipt.dateLabel':'Date',
     'receipt.cashierLabel':'Cashier', 'receipt.customerLabel':'Customer', 'receipt.itemLabel':'Item',
@@ -4617,8 +4679,9 @@ const I18N = {
     'reports.exportPdf':'Export PDF',
     'reports.todayIncome':"Today's Income", 'reports.todayExpenses':"Today's Expenses",
     'reports.profitGross':'Profit (Gross)', 'reports.netProfit':'Net Profit',
+    'reports.todayMovements':"Today's Movements", 'reports.todayAfterExpenses':'Total After Expenses',
     'reports.capitalLabel':'Your Capital (Cash on Hand)', 'reports.manage':'Manage',
-    'reports.manageCapitalTitle':'Manage Your Capital', 'reports.currentBalance':'Current balance: {amount} دج',
+    'reports.manageCapitalTitle':'Manage Your Capital', 'reports.currentBalance':'Current balance: {amount} ${window.__essenceCurrencySymbol()}',
     'reports.editBalance':'Edit', 'reports.deposit':'Deposit', 'reports.withdraw':'Withdraw', 'reports.history':'History',
     'reports.newBalanceLabel':'New Balance', 'reports.depositAmountLabel':'Amount to Deposit', 'reports.withdrawAmountLabel':'Amount to Withdraw',
     'reports.noteOptional':'Note (optional)', 'reports.applyChange':'Apply',
@@ -4688,11 +4751,13 @@ const I18N = {
     'stock.skuNotFound':'No movement history found for SKU "{code}".',
     'stock.pleaseEnterQty':'Please enter a quantity greater than 0.',
     'stock.scanPrompt':'Scan or type a product SKU:',
-    'home.heroGreeting':'Good afternoon, Rania 👋',
+    'home.greetingMorningNamed':'Good morning, {name} 👋', 'home.greetingMorningGeneric':'Good morning 👋',
+    'home.greetingAfternoonNamed':'Good afternoon, {name} 👋', 'home.greetingAfternoonGeneric':'Good afternoon 👋',
+    'home.greetingEveningNamed':'Good evening, {name} 👋', 'home.greetingEveningGeneric':'Good evening 👋',
     "home.heroLineWithSalesOne":"You've made {amount} today across {n} sale.",
     "home.heroLineWithSalesOther":"You've made {amount} today across {n} sales.",
     'home.heroLineNoSales':'No sales recorded yet today.', 'home.startASale':'Start a sale →',
-    'home.downtownBranch':'Downtown Branch',
+    'home.downtownBranch':'Essence — Luxury Perfumes',
     'home.saleCountOne':'{n} sale', 'home.saleCountOther':'{n} sales',
     'home.marginLabel':'{pct}% margin', 'home.debtorCountOne':'{n} debtor', 'home.debtorCountOther':'{n} debtors',
     'home.needsAttention':'Needs attention',
@@ -4730,6 +4795,7 @@ const I18N = {
     'nav.category':'Catégorie', 'nav.debts':'Dettes', 'nav.sales':'Ventes', 'nav.stock':'Stock',
     'nav.expenses':'Dépenses', 'nav.reports':'Rapports', 'nav.analytics':'Analytique', 'nav.settings':'Paramètres',
     'sidebar.role':'Gérante du magasin',
+    'sidebar.addLogo':'Ajouter votre logo',
     'role.owner':'Propriétaire', 'role.manager':'Responsable', 'role.cashier':'Caissier',
     'auth.title':'Connexion', 'auth.subtitle':'Entrez les identifiants de votre magasin pour continuer',
     'auth.email':'E-mail', 'auth.password':'Mot de passe', 'auth.signIn':'Se connecter', 'auth.signingIn':'Connexion en cours…',
@@ -4737,7 +4803,7 @@ const I18N = {
     'topbar.searchPlaceholder':'Rechercher produits, factures, débiteurs…',
     'topbar.searchProducts':'Produits', 'topbar.searchInvoices':'Factures', 'topbar.searchDebtors':'Débiteurs',
     'topbar.searchNoResults':'Aucun résultat.',
-    'topbar.toggleTheme':'Changer le thème', 'topbar.notifications':'Notifications',
+    'topbar.toggleTheme':'Changer le thème', 'topbar.notifications':'Notifications', 'topbar.syncNow':'Synchroniser',
     'sync.offline':'Vous êtes hors ligne', 'sync.pending':'{n} changement(s) en attente de synchro',
     'sync.syncing':'Synchronisation…', 'sync.retryNow':'Réessayer',
     'notif.markAllRead':'Tout marquer comme lu', 'notif.empty':'Aucune notification pour le moment',
@@ -4800,8 +4866,8 @@ const I18N = {
     'products.addPaymentHint':"Comment vous payez le stock initial de ce produit — Cash déduit de votre capital maintenant, Crédit ajoute à votre solde avec le fournisseur.",
     'products.restockInvalidCost':'Saisissez un coût unitaire valide (0 ou plus).',
     'products.restockSelectSupplierForCredit':'Sélectionnez un fournisseur pour acheter à crédit.',
-    'products.restockCashNote':'{amount} دج payé au fournisseur maintenant.',
-    'products.restockCreditNote':"{amount} دج ajouté au solde de {supplier}.",
+    'products.restockCashNote':'{amount} ${window.__essenceCurrencySymbol()} payé au fournisseur maintenant.',
+    'products.restockCreditNote':"{amount} ${window.__essenceCurrencySymbol()} ajouté au solde de {supplier}.",
     'capital.movementRestock':'Réassort : {name} × {qty}',
     'capital.movementNewProduct':'Nouveau produit : {name} × {qty}',
     'products.qtyReceived':'Quantité reçue', 'products.addToStock':'Ajouter au stock',
@@ -4880,7 +4946,7 @@ const I18N = {
     'settings.lowStockAlertsTitle':'Alertes de stock bas', 'settings.lowStockAlertsSub':"Quand un produit atteint son seuil",
     'settings.newDebtTitle':'Nouvelle vente à crédit / dette', 'settings.newDebtSub':'Quand une vente est faite à crédit ou partagée',
     'settings.dailySummaryTitle':'E-mail de résumé quotidien', 'settings.dailySummarySub':'Envoyé chaque soir à la fermeture',
-    'settings.largeExpenseTitle':'Alerte de dépense importante', 'settings.largeExpenseSub':'Notifie quand une dépense dépasse {amount} دج',
+    'settings.largeExpenseTitle':'Alerte de dépense importante', 'settings.largeExpenseSub':'Notifie quand une dépense dépasse {amount} ${window.__essenceCurrencySymbol()}',
     'settings.themeTitle':'Thème', 'settings.themeDark':'Sombre (défaut)', 'settings.themeLight':'Clair',
     'settings.backupExportTitle':'Sauvegarde & export', 'settings.backupExportSub':'Vos données restent locales sur cet appareil via IndexedDB',
     'settings.autoBackupTitle':'Sauvegarde automatique quotidienne', 'settings.autoBackupSub':'Enregistre un fichier de sauvegarde local chaque soir',
@@ -4936,10 +5002,10 @@ const I18N = {
     'suppliers.colOwes':'Doit', 'suppliers.totalOwedBalance':'Total dû à ce fournisseur',
     'suppliers.unpaidInvoices':'Achats impayés / partiellement payés', 'suppliers.noInvoicesYet':"Aucune facture d'achat pour le moment.",
     'suppliers.recordPaymentLabel':'Enregistrer un paiement', 'suppliers.paymentPlaceholder':'Montant payé, ex. 100',
-    'suppliers.recordPayment':'Enregistrer le paiement', 'suppliers.paidLabel':'{amount} دج payé',
+    'suppliers.recordPayment':'Enregistrer le paiement', 'suppliers.paidLabel':'{amount} ${window.__essenceCurrencySymbol()} payé',
     'suppliers.invalidPaymentAmount':'Saisissez un montant de paiement valide.',
-    'suppliers.amountExceedsBalance':'Le montant dépasse ce que vous devez à ce fournisseur ({amount} دج).',
-    'suppliers.paymentRecordedMsg':'Paiement de {amount} دج enregistré pour {name}.',
+    'suppliers.amountExceedsBalance':'Le montant dépasse ce que vous devez à ce fournisseur ({amount} ${window.__essenceCurrencySymbol()}).',
+    'suppliers.paymentRecordedMsg':'Paiement de {amount} ${window.__essenceCurrencySymbol()} enregistré pour {name}.',
     'capital.movementSupplierPayment':'Paiement au fournisseur : {name}',
     'capital.movementReturn':'Retour — Vente #{id}',
     'capital.movementSale':'Vente #{id}', 'capital.movementExpense':'Dépense : {desc}',
@@ -4960,16 +5026,16 @@ const I18N = {
     'debts.totalOutstandingBalance':'Solde total impayé', 'debts.unpaidInvoices':'Factures impayées / partiellement payées',
     'debts.recordPaymentLabel':'Enregistrer un paiement', 'debts.paymentPlaceholder':'Montant reçu, ex. 100',
     'debts.sendReminder':'Envoyer un rappel', 'debts.recordPayment':'Enregistrer le paiement',
-    'debts.paidLabel':'{amount} دج payé',
+    'debts.paidLabel':'{amount} ${window.__essenceCurrencySymbol()} payé',
     'debts.registerDebtor':'Enregistrer un client achetant à crédit',
     'debts.fullNameLabel':'Nom complet', 'debts.phoneNumberLabel':'Numéro de téléphone',
     'debts.initialDebtLabel':'Montant de la dette initiale (optionnel)',
     'debts.hintPart1':"Ce débiteur apparaîtra également automatiquement à la caisse chaque fois qu'un paiement ",
     'debts.hintPart2':' ou ', 'debts.hintPart3':' est utilisé dans la Caisse.',
-    'debts.reminderSentMsg':'Rappel envoyé à {name} ({phone}) — solde impayé {amount} دج.',
+    'debts.reminderSentMsg':'Rappel envoyé à {name} ({phone}) — solde impayé {amount} ${window.__essenceCurrencySymbol()}.',
     'debts.invalidPaymentAmount':'Saisissez un montant de paiement valide.',
-    'debts.amountExceedsBalance':'Le montant dépasse le solde impayé de {amount} دج.',
-    'debts.paymentRecordedMsg':'Paiement de {amount} دج enregistré pour {name}.',
+    'debts.amountExceedsBalance':'Le montant dépasse le solde impayé de {amount} ${window.__essenceCurrencySymbol()}.',
+    'debts.paymentRecordedMsg':'Paiement de {amount} ${window.__essenceCurrencySymbol()} enregistré pour {name}.',
     'debts.pleaseEnterDebtorName':'Veuillez saisir le nom du débiteur.',
     'sales.title':'Ventes', 'sales.subtitle':'Historique complet de chaque transaction sur toutes les caisses',
     'sales.viewReports':'Voir les rapports', 'sales.searchPlaceholder':'Rechercher n° de facture, client…',
@@ -4995,7 +5061,7 @@ const I18N = {
     'sales.returnedMsgOne':'Facture n°{id} retournée. Stock restauré pour {n} article.',
     'sales.returnedMsgOther':'Facture n°{id} retournée. Stock restauré pour {n} articles.',
     'sales.printTitle':'Imprimer', 'sales.viewTitle':'Voir',
-    'sales.debtReducedMsg':' {amount} دج retiré du solde impayé de {name}.',
+    'sales.debtReducedMsg':' {amount} ${window.__essenceCurrencySymbol()} retiré du solde impayé de {name}.',
     'sales.stockReturnReason':'Retourné — Vente n°{id}',
     'receipt.walkInCustomer':'Client de passage', 'receipt.invoiceLabel':'Facture', 'receipt.dateLabel':'Date',
     'receipt.cashierLabel':'Caissier', 'receipt.customerLabel':'Client', 'receipt.itemLabel':'Article',
@@ -5029,8 +5095,9 @@ const I18N = {
     'reports.exportPdf':'Exporter en PDF',
     'reports.todayIncome':"Revenus du jour", 'reports.todayExpenses':"Dépenses du jour",
     'reports.profitGross':'Profit (Brut)', 'reports.netProfit':'Profit net',
+    'reports.todayMovements':"Mouvements du jour", 'reports.todayAfterExpenses':'Total après dépenses',
     'reports.capitalLabel':'Votre capital (liquidités disponibles)', 'reports.manage':'Gérer',
-    'reports.manageCapitalTitle':'Gérer votre capital', 'reports.currentBalance':'Solde actuel : {amount} دج',
+    'reports.manageCapitalTitle':'Gérer votre capital', 'reports.currentBalance':'Solde actuel : {amount} ${window.__essenceCurrencySymbol()}',
     'reports.editBalance':'Modifier', 'reports.deposit':'Dépôt', 'reports.withdraw':'Retrait', 'reports.history':'Historique',
     'reports.newBalanceLabel':'Nouveau solde', 'reports.depositAmountLabel':'Montant à déposer', 'reports.withdrawAmountLabel':'Montant à retirer',
     'reports.noteOptional':'Note (facultatif)', 'reports.applyChange':'Appliquer',
@@ -5100,11 +5167,13 @@ const I18N = {
     'stock.skuNotFound':'Aucun historique de mouvement trouvé pour le SKU « {code} ».',
     'stock.pleaseEnterQty':'Veuillez entrer une quantité supérieure à 0.',
     'stock.scanPrompt':'Scannez ou saisissez un SKU produit :',
-    'home.heroGreeting':'Bon après-midi, Rania 👋',
+    'home.greetingMorningNamed':'Bonjour, {name} 👋', 'home.greetingMorningGeneric':'Bonjour 👋',
+    'home.greetingAfternoonNamed':'Bon après-midi, {name} 👋', 'home.greetingAfternoonGeneric':'Bon après-midi 👋',
+    'home.greetingEveningNamed':'Bonsoir, {name} 👋', 'home.greetingEveningGeneric':'Bonsoir 👋',
     'home.heroLineWithSalesOne':"Vous avez fait {amount} aujourd'hui sur {n} vente.",
     'home.heroLineWithSalesOther':"Vous avez fait {amount} aujourd'hui sur {n} ventes.",
     'home.heroLineNoSales':"Aucune vente enregistrée aujourd'hui.", 'home.startASale':'Commencer une vente →',
-    'home.downtownBranch':'Succursale Downtown',
+    'home.downtownBranch':'Essence — Luxury Perfumes',
     'home.saleCountOne':'{n} vente', 'home.saleCountOther':'{n} ventes',
     'home.marginLabel':'{pct}% de marge', 'home.debtorCountOne':'{n} débiteur', 'home.debtorCountOther':'{n} débiteurs',
     'home.needsAttention':'Nécessite attention',
@@ -5259,22 +5328,27 @@ window.AppState = {
   // ===== إعدادات مشتركة (Settings) — تقرا منها POS/Sales مباشرة، كتتحفظ مع الباقي فـ localStorage =====
   // currency: 0 = DZD (الدينار الجزائري) — الوحيدة المتوفرة، الـ select فـ Settings دابا مقفول عليها
   settings: {
-    taxRate: 0, storeName: 'Essence — Luxury Perfumes', currency: 'DZD',
-    address: '', phone: '', email: '', largeExpenseThreshold: 500,
+    taxRate: 0, storeName: 'Essence — Luxury Perfumes', currency: 0,
+    // ⚠️ مصلح: address/phone/email كانو غير فحقول HTML (value="..." ديمو)، ماكانوش جزء من
+    // AppState.settings — يعني ماكانوش كيتحفظو فـ localStorage ولا فـ Supabase، وكيرجعو للقيم
+    // الديمو ("Al Baraka Mall..."، "+971...") عند أي refresh. دابا مصدر الحقيقة الوحيد هوما هنا.
+    address: '', phone: '', email: '',
+    largeExpenseThreshold: 500,
     receiptHeaderLine1: 'Essence — Luxury Perfumes', receiptHeaderLine2: '',
     receiptFooterLine1: 'Thank you for shopping with us!', receiptFooterLine2: '',
+    // فارغ بالتصميم: التطبيق كيبدا بلا شعار افتراضي — كل عميل كيختار شعارو الخاص أول ما يفتح
+    // البرنامج (سيدبار أو Settings)، وكيتحفظ محليا (localStorage عبر نفس آلية AppState).
+    logoDataUrl: '',
   },
 };
 
-// ===== عملة حقيقية قابلة للاختيار (كانت مقفولة على دج بوحدها) — مصدر واحد مشترك يستعملوه كل
-// money() المكررة فـ الصفحات المختلفة (POS/Reports/Analytics/Settings). كود بلا رمز خاص = suffix
-// بسيط ("1,500 USD") — بلا تعقيد اتجاه (RTL/LTR) للرموز كيفما $/€ فبداية أو نهاية الرقم.
-window.__CURRENCY_LABELS = { DZD:'دج', USD:'USD', EUR:'EUR', MAD:'MAD', TND:'TND', EGP:'EGP', SAR:'SAR', AED:'AED', GBP:'GBP' };
-window.__money = function(n){
-  let cur = window.AppState.settings.currency;
-  if(typeof cur !== 'string' || !cur) cur = 'DZD'; // بيانات قديمة كانت رقم (index) — الافتراضي كان ديما دج
-  const label = window.__CURRENCY_LABELS[cur] || cur;
-  return Math.round(n||0).toLocaleString() + ' ' + label;
+// ===== دالة مشتركة: رمز العملة الحالي (كانت مقفولة على "دج" بوحدها، دابا قابلة للاختيار من Settings) =====
+// index 0 = دج، 1 = DZD، 2 = DA — نفس ترتيب الـ<option> فـ #settings_currency. كل الأماكن لي كانت
+// كاتبة ' ' + window.__essenceCurrencySymbol() يدويا دابا كاتنادي هاد الدالة، باش التبديل من Settings يبان فالتطبيق كامل فورا.
+window.__essenceCurrencySymbol = function(){
+  const CURRENCY_SYMBOLS = ['دج', 'DZD', 'DA'];
+  const idx = (window.AppState && window.AppState.settings && window.AppState.settings.currency) || 0;
+  return CURRENCY_SYMBOLS[idx] || 'دج';
 };
 
 // ===== PERSISTENCE: تحميل الحالة المحفوظة من localStorage =====
@@ -5367,8 +5441,8 @@ window.__printSaleReceipt = function(sale){
     <tr>
       <td style="padding:4px 0;">${i.name}</td>
       <td style="padding:4px 0; text-align:center;">${i.qty}</td>
-      <td style="padding:4px 0; text-align:right;">${i.price.toFixed(2)} دج</td>
-      <td style="padding:4px 0; text-align:right;">${(i.qty*i.price).toFixed(2)} دج</td>
+      <td style="padding:4px 0; text-align:right;">${i.price.toFixed(2)} ${window.__essenceCurrencySymbol()}</td>
+      <td style="padding:4px 0; text-align:right;">${(i.qty*i.price).toFixed(2)} ${window.__essenceCurrencySymbol()}</td>
     </tr>`).join('');
 
   const custLine = sale.walkIn || !sale.customer ? t('receipt.walkInCustomer') : sale.customer;
@@ -5397,14 +5471,14 @@ window.__printSaleReceipt = function(sale){
         <tbody>${itemsRows}</tbody>
       </table>
       <div class="receipt-divider"></div>
-      <div class="receipt-row"><span>${t('receipt.subtotalLabel')}</span><span>${f.subtotal.toFixed(2)} دج</span></div>
-      ${f.discountPct > 0 ? `<div class="receipt-row"><span>${tf('receipt.discountLabel', {pct: f.discountPct})}</span><span>−${f.discount.toFixed(2)} دج</span></div>` : ''}
-      <div class="receipt-row"><span>${tf('receipt.taxLabel', {pct: f.taxRatePct})}</span><span>${f.tax.toFixed(2)} دج</span></div>
-      <div class="receipt-row receipt-total"><span>${t('receipt.totalLabel')}</span><span>${f.total.toFixed(2)} دج</span></div>
+      <div class="receipt-row"><span>${t('receipt.subtotalLabel')}</span><span>${f.subtotal.toFixed(2)} ${window.__essenceCurrencySymbol()}</span></div>
+      ${f.discountPct > 0 ? `<div class="receipt-row"><span>${tf('receipt.discountLabel', {pct: f.discountPct})}</span><span>−${f.discount.toFixed(2)} ${window.__essenceCurrencySymbol()}</span></div>` : ''}
+      <div class="receipt-row"><span>${tf('receipt.taxLabel', {pct: f.taxRatePct})}</span><span>${f.tax.toFixed(2)} ${window.__essenceCurrencySymbol()}</span></div>
+      <div class="receipt-row receipt-total"><span>${t('receipt.totalLabel')}</span><span>${f.total.toFixed(2)} ${window.__essenceCurrencySymbol()}</span></div>
       <div class="receipt-row"><span>${t('receipt.paymentLabel')}</span><span>${paymentDisplay ? t(paymentDisplay) : sale.payment}</span></div>
       ${sale.payment === 'Split' && typeof sale.paidNow === 'number' ? `
-      <div class="receipt-row"><span>${t('receipt.paidNowLabel')}</span><span>${sale.paidNow.toFixed(2)} دج</span></div>
-      <div class="receipt-row"><span>${t('receipt.remainingCreditLabel')}</span><span>${sale.creditAmount.toFixed(2)} دج</span></div>` : ''}
+      <div class="receipt-row"><span>${t('receipt.paidNowLabel')}</span><span>${sale.paidNow.toFixed(2)} ${window.__essenceCurrencySymbol()}</span></div>
+      <div class="receipt-row"><span>${t('receipt.remainingCreditLabel')}</span><span>${sale.creditAmount.toFixed(2)} ${window.__essenceCurrencySymbol()}</span></div>` : ''}
       ${sale.coupon ? `<div class="receipt-row"><span>${t('receipt.couponLabel')}</span><span>${sale.coupon}</span></div>` : ''}
       ${f.estimated ? `<div class="receipt-note">${t('receipt.estimatedNote')}</div>` : ''}
       ${sale.note ? `<div class="receipt-divider"></div><div class="receipt-note">${tf('receipt.noteLabel', {note: sale.note})}</div>` : ''}
@@ -5439,7 +5513,7 @@ window.__processReturn = function(sale){
     if(window.AppState.stockMovements){
       window.AppState.stockMovements.unshift({
         name: item.name, sku: p ? p.sku : '', type:'in', qty: item.qty,
-        reason: tf('sales.stockReturnReason', {id: sale.id}), who:'You', time: timeLabel, c1: p ? p.c1 : '#7C5CFF',
+        reason: tf('sales.stockReturnReason', {id: sale.id}), who: window.__essenceActorName(), time: timeLabel, c1: p ? p.c1 : '#7C5CFF',
         _txn: true,
       });
     }
@@ -5568,7 +5642,7 @@ window.__productVisualHTML = function(p, opts){
   const TODAY_LABEL = window.__todayLabel();
   const LOW_STOCK_THRESHOLD = 15;
 
-  function money(n){ return window.__money(n); }
+  function money(n){ return Math.round(n||0).toLocaleString() + ' ' + window.__essenceCurrencySymbol(); }
   function saleTotal(s){
     if(window.__saleFinancials) return window.__saleFinancials(s).total;
     return s.items.reduce((x,i)=>x + i.qty*i.price, 0);
@@ -5598,7 +5672,15 @@ window.__productVisualHTML = function(p, opts){
 
     let weekday = '';
     try{ weekday = new Date(TODAY_LABEL).toLocaleDateString(window.__i18n.lang === 'fr' ? 'fr-FR' : 'en-US', { weekday:'long' }); }catch(e){}
-    document.getElementById('home_heroEyebrow').textContent = `${weekday ? weekday+', ' : ''}${TODAY_LABEL.replace(/(\d+) (\w+) (\d+)/, '$1 $2 $3')} · ${t('home.downtownBranch')}`;
+    document.getElementById('home_heroEyebrow').textContent = `${weekday ? weekday+', ' : ''}${TODAY_LABEL.replace(/(\d+) (\w+) (\d+)/, '$1 $2 $3')} · ${(window.AppState.settings && window.AppState.settings.storeName) || t('home.downtownBranch')}`;
+    // ترحيب ديناميكي: حسب الوقت الحقيقي ديال الجهاز + الاسم الحقيقي ديال اللي دخل (من store_members،
+    // عبر __essenceActorName) — بلا session (local-only) كيبقى ترحيب عام بلا اسم (بلا "Rania" هاردكودد).
+    const hour = new Date().getHours();
+    const period = hour < 12 ? 'Morning' : hour < 18 ? 'Afternoon' : 'Evening';
+    const actorName = (window.__essenceStore && window.__essenceStore.displayName) || null;
+    document.getElementById('home_heroGreeting').textContent = actorName
+      ? tf(`home.greeting${period}Named`, {name: actorName})
+      : t(`home.greeting${period}Generic`);
     document.getElementById('home_heroLine').innerHTML = todaySales.length
       ? tf(todaySales.length===1?'home.heroLineWithSalesOne':'home.heroLineWithSalesOther', {amount: `<b style="color:var(--text);">${money(todayTotal)}</b>`, n: todaySales.length})
       : `${t('home.heroLineNoSales')} <a href="#" onclick="goToPage('pos');return false;" style="color:var(--purple);">${t('home.startASale')}</a>`;
@@ -5705,16 +5787,14 @@ window.__productVisualHTML = function(p, opts){
     }).join('') : `<div style="padding:20px; text-align:center; color:var(--text-faint); font-size:13px;">${t('home.allWellStocked')}</div>`;
 
     /* ---------- Branch performance ----------
-       ⚠️ إصلاح: كانت Marina Mall/Airport Road مكتوبين بالقيمة (1,480 دج / 690 دج) هاردكودد فالكود
-       نفسو — بلا علاقة بأي بيانات حقيقية، كيبانو حتى لمحل جديد بلا شي بيع. دابا كنقراو من الفروع
-       الحقيقية المسجلة فـ Settings → Branches (window.AppState.branches). ⚠️ ماكاين حتى نظام
-       multi-branch/sales-per-branch حقيقي فهاد التطبيق (كل البيوعات فـ AppState.sales واحدة، بلا
-       حقل branch)، فـ "value" (رقم المبيعات) ماكينقدروش نحسبوه بالفرع — كنبينو todayTotal الحقيقي
-       غير للفرع الأول (الرئيسي)، والباقي بلا رقم مبيعات (خاصو data model جديد إذا الحاجة ظهرت). */
+       ⚠️ ماكاين حتى نظام multi-branch/sales-per-branch حقيقي فهاد التطبيق (كل البيوعات فـ AppState.sales
+       واحدة، بلا حقل branch) — دابا كنقراو الفروع الحقيقية لي زادهم المستخدم فـ Settings→Branches بدل
+       لائحة ديمو ثابتة. الفرع الأول كيوري رقم اليوم الحقيقي (todayTotal، حيت هو التطبيق كيتتبع بيه)،
+       الباقي (بلا تتبع بيوعات مستقل بعد) كيوريو 0 دج بصراحة بدل رقم مختلق. */
     const realBranches = Array.isArray(window.AppState.branches) ? window.AppState.branches : [];
-    const branches = realBranches.map((b, i) => ({
-      name: b.name, sub: tf(b.employees===1?'settings.employeesCountOne':'settings.employeesCountOther', {sub:b.sub||'', n:b.employees||0}),
-      value: i === 0 ? money(todayTotal) : '—', icon: b.icon || 'store', live: true,
+    const branches = realBranches.map((b,i) => ({
+      name: b.name, sub: tf('home.employeesCountOther', {n: b.employees||0}),
+      value: i===0 ? money(todayTotal) : money(0), icon: b.icon||'store', live:true,
     }));
     document.getElementById('home_branchList').innerHTML = branches.length ? branches.map(b => `
       <div class="branch-tile">
@@ -5722,7 +5802,7 @@ window.__productVisualHTML = function(p, opts){
         <div class="branch-info"><div class="branch-name">${b.name}</div><div class="branch-sub">${b.sub}</div></div>
         <div class="branch-right"><div class="branch-value">${b.value}</div>
           <span class="branch-badge" style="${b.live ? '' : 'background:var(--fill-2); color:var(--text-faint);'}">${b.live ? t('home.openNow') : t('home.closed')}</span></div>
-      </div>`).join('') : `<div style="padding:20px; text-align:center; color:var(--text-faint); font-size:13px;">${t('settings.noBranchesYet')}</div>`;
+      </div>`).join('') : `<div style="padding:20px; text-align:center; color:var(--text-faint); font-size:13px;">${t('home.allWellStocked')}</div>`;
 
     /* ---------- Top products اليوم (حقيقي، محسوب من بيوعات اليوم) ---------- */
     const agg = {};
@@ -5774,24 +5854,6 @@ window.__productVisualHTML = function(p, opts){
   const posSearchInput = document.getElementById('pos_searchInput');
   let activeChip = 'All';
 
-  // ⚠️ إصلاح: `.chips-row` كانت HTML ثابت (All/Men/Women/Arabic/French/Luxury/Niche/Offers/New
-  // Arrival/Best Sellers/Limited Edition) ديمو بلا حتى event listener — الضغط عليها ماكان يدير والو.
-  // دابا كتتبنى من الفئات الحقيقية لي زادها صاحب المحل (window.AppState.categories).
-  const chipsRow = document.getElementById('pos_chipsRow');
-  function renderChips(){
-    if(!chipsRow) return;
-    const cats = (window.AppState.categories || []).map(c => (typeof c === 'object' ? c.name : c)).filter(Boolean);
-    const chips = ['All', ...cats];
-    chipsRow.innerHTML = chips.map(name => `<div class="chip ${name === activeChip ? 'active' : ''}" data-cat="${name}">${name}</div>`).join('');
-  }
-  chipsRow && chipsRow.addEventListener('click', (e) => {
-    const chip = e.target.closest('.chip');
-    if(!chip) return;
-    chipsRow.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-    chip.classList.add('active');
-    renderGrid(chip.dataset.cat);
-  });
-
   function renderGrid(filterCat){
     if(filterCat !== undefined) activeChip = filterCat;
     let list = (!activeChip || activeChip === 'All') ? products : products.filter(p => (p.tags||[]).includes(activeChip) || p.cat === activeChip);
@@ -5811,7 +5873,7 @@ window.__productVisualHTML = function(p, opts){
         <span class="p-stock ${p.stock<=5?'low':'ok'}">${p.stock} ${t('pos.inStock')}</span>
       </div>
       <div class="p-bottom-row">
-        <div class="p-price mono">${p.price}<span class="cur"> دج</span></div>
+        <div class="p-price mono">${p.price}<span class="cur"> ${window.__essenceCurrencySymbol()}</span></div>
         <button class="p-add" data-idx="${idx}" ${p.stock===0?'disabled style="opacity:.4;cursor:not-allowed;"':''}><i data-lucide="plus"></i></button>
       </div>
     </div>`;
@@ -5819,6 +5881,14 @@ window.__productVisualHTML = function(p, opts){
     window.__lucideCreateIcons();
   }
   renderChips();
+  function renderChips(){
+    // ⚠️ مصلح: كانت الشرائح (chips) ثابتة فالـHTML (Men/Women/Arabic/French/Luxury/Niche/Offers/...) —
+    // ديمو بحت، بلا علاقة بالفئات الحقيقية ديال المحل. دابا كتتبنى من `products.map(p=>p.cat)` الحقيقيين.
+    const cats = ['All', ...new Set(products.map(p=>p.cat).filter(Boolean))];
+    document.getElementById('pos_catChips').innerHTML = cats.map(c =>
+      `<div class="chip ${c===activeChip?'active':''}" data-cat="${c}">${c==='All'?t('sales.filterAllValue'):c}</div>`
+    ).join('');
+  }
   renderGrid('All');
   window.__pageRefreshers.pos = () => { syncStoreName(); renderChips(); renderGrid(); renderCart(); };
   function syncStoreName(){
@@ -5854,7 +5924,7 @@ window.__productVisualHTML = function(p, opts){
       </div>
       <div class="c-item-info">
         <div class="c-item-name">${i.name}</div>
-        <div class="c-item-price mono">${i.price.toFixed(2)} دج</div>
+        <div class="c-item-price mono">${i.price.toFixed(2)} ${window.__essenceCurrencySymbol()}</div>
       </div>
       <div class="c-item-right">
         <i data-lucide="x" class="c-item-remove" data-idx="${idx}" style="width:13px;height:13px; cursor:pointer;"></i>
@@ -5876,22 +5946,22 @@ window.__productVisualHTML = function(p, opts){
 
     const panel = document.getElementById('panel_pos');
     const rows = panel.querySelectorAll('.sum-row');
-    if(rows[0]) rows[0].querySelector('span:last-child').textContent = `${subtotal.toFixed(2)} دج`;
+    if(rows[0]) rows[0].querySelector('span:last-child').textContent = `${subtotal.toFixed(2)} ${window.__essenceCurrencySymbol()}`;
     if(rows[1]){
       rows[1].querySelector('span:first-child').textContent = `${t('pos.discountLabel')} (${discountPct}%)`;
-      rows[1].querySelector('span:last-child').textContent = `−${discount.toFixed(2)} دج`;
+      rows[1].querySelector('span:last-child').textContent = `−${discount.toFixed(2)} ${window.__essenceCurrencySymbol()}`;
       rows[1].style.display = discountPct > 0 ? '' : 'none';
     }
     if(rows[2]){
       rows[2].querySelector('span:first-child').textContent = `${t('pos.taxLabel')} (${taxRatePct}%)`;
-      rows[2].querySelector('span:last-child').textContent = `${tax.toFixed(2)} دج`;
+      rows[2].querySelector('span:last-child').textContent = `${tax.toFixed(2)} ${window.__essenceCurrencySymbol()}`;
     }
     const totalRow = panel.querySelector('.sum-row.total span:last-child');
-    if(totalRow) totalRow.textContent = `${total.toFixed(2)} دج`;
+    if(totalRow) totalRow.textContent = `${total.toFixed(2)} ${window.__essenceCurrencySymbol()}`;
     const checkoutBtn = panel.querySelector('.checkout-btn');
-    if(checkoutBtn) checkoutBtn.innerHTML = `<i data-lucide="lock"></i>${t('pos.charge')} ${total.toFixed(2)} دج`;
+    if(checkoutBtn) checkoutBtn.innerHTML = `<i data-lucide="lock"></i>${t('pos.charge')} ${total.toFixed(2)} ${window.__essenceCurrencySymbol()}`;
     const mcTotal = document.getElementById('pos_mcTotal');
-    if(mcTotal) mcTotal.textContent = `${total.toFixed(2)} دج`;
+    if(mcTotal) mcTotal.textContent = `${total.toFixed(2)} ${window.__essenceCurrencySymbol()}`;
 
     // انعكاس بصري لحالة Coupon/Note على زرارهم (بحال ماهو Active/بلا)
     const couponBtn = document.getElementById('pos_extraCouponBtn');
@@ -5924,13 +5994,13 @@ window.__productVisualHTML = function(p, opts){
     }
   });
 
-  // category chip filter
-  document.querySelectorAll('#panel_pos .chips-row .chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      document.querySelectorAll('#panel_pos .chips-row .chip').forEach(c => c.classList.remove('active'));
-      chip.classList.add('active');
-      renderGrid(chip.textContent.trim());
-    });
+  // category chip filter (delegation — الشرائح كتتبنى ديناميكياً دابا، ماشي ثابتة فالـHTML)
+  document.getElementById('pos_catChips').addEventListener('click', (e) => {
+    const chip = e.target.closest('.chip');
+    if(!chip) return;
+    document.querySelectorAll('#pos_catChips .chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    renderGrid(chip.dataset.cat);
   });
 
   // cart qty +/- and remove
@@ -5992,7 +6062,7 @@ window.__productVisualHTML = function(p, opts){
       creditAmount = total;
       paidNow = 0;
     } else if(method === 'split'){
-      const input = prompt(`Total is ${total.toFixed(2)} دج. How much is being paid now (cash/card)? The rest goes to ${custName}'s credit balance:`, (total/2).toFixed(2));
+      const input = prompt(`Total is ${total.toFixed(2)} ${window.__essenceCurrencySymbol()}. How much is being paid now (cash/card)? The rest goes to ${custName}'s credit balance:`, (total/2).toFixed(2));
       if(input === null) return; // rajع bla ma yqata3 l'checkout
       paidNow = parseFloat(input);
       if(isNaN(paidNow) || paidNow < 0 || paidNow > total){ alert('Please enter a valid amount between 0 and the total.'); return; }
@@ -6016,7 +6086,7 @@ window.__productVisualHTML = function(p, opts){
       // delete+insert كل مرة) — هادشي هو لي كيخلي trigger الستوك (AFTER INSERT ON sale_items) يتفعل
       // مرة وحدة بوحدها لكل سطر بيع حقيقي، ماشي فكل مرة sales array يتبدل (شوف تفاصيل فـ sales sync).
       items: cart.map(i => ({ uuid: crypto.randomUUID(), name:i.name, qty:i.qty, price:i.price, brand:i.brand||'', cat:i.cat||'', cost:typeof i.cost==='number'?i.cost:null })),
-      payment: paymentLabel, employee:'You', status:'completed',
+      payment: paymentLabel, employee: window.__essenceActorName(), status:'completed',
       subtotal, discountPct, discount, taxRate: (window.AppState.settings.taxRate || 0), tax, total,
       paidNow, creditAmount, note: cartNote, coupon: couponCode
     };
@@ -6033,7 +6103,7 @@ window.__productVisualHTML = function(p, opts){
       if(window.AppState.stockMovements){
         window.AppState.stockMovements.unshift({
           name: item.name, sku: p ? p.sku : '', type:'out', qty: -item.qty,
-          reason: `Sold — POS #${invId}`, who:'You', time: timeLabel, c1: p ? p.c1 : '#7C5CFF',
+          reason: `Sold — POS #${invId}`, who: window.__essenceActorName(), time: timeLabel, c1: p ? p.c1 : '#7C5CFF',
           _txn: true,
         });
       }
@@ -6054,8 +6124,8 @@ window.__productVisualHTML = function(p, opts){
       date: dateLabel, time: timeLabel
     });
 
-    const printNow = confirm(`Sale completed — paid by ${paymentLabel}. Total ${total.toFixed(2)} دج.` +
-      (creditAmount > 0 ? ` ${creditAmount.toFixed(2)} دج added to ${custName}'s credit balance.` : '') +
+    const printNow = confirm(`Sale completed — paid by ${paymentLabel}. Total ${total.toFixed(2)} ${window.__essenceCurrencySymbol()}.` +
+      (creditAmount > 0 ? ` ${creditAmount.toFixed(2)} ${window.__essenceCurrencySymbol()} added to ${custName}'s credit balance.` : '') +
       `\n\nPrint receipt now?`);
     if(printNow) window.__printSaleReceipt(newSale);
     cart = [];
@@ -6131,13 +6201,13 @@ window.__productVisualHTML = function(p, opts){
     if(panel && panel.style.display !== 'none') scanBarcode(code);
   });
 
+  // ⚠️ كان هنا زر لغة وهمي (prompt 1/2/3 + alert "coming soon" حتى فـ English/Français لي خدامين
+  // فعليا عبر نظام I18N الحقيقي فـ Settings). بدلناه يستعمل نفس window.__i18n.setLang() الحقيقي —
+  // toggle بسيط بين en/fr (اللغتين المدعومتين فعليا)، بلا أي وهم/coming-soon.
   document.getElementById('pos_langBtn').addEventListener('click', () => {
-    const pick = prompt('Choose a language:\n1. English\n2. العربية\n3. Français\n\nEnter a number:', '1');
-    if(pick === null) return;
-    const map = { '1':'English', '2':'العربية', '3':'Français' };
-    const lang = map[pick.trim()];
-    if(!lang){ alert('Please enter 1, 2, or 3.'); return; }
-    alert(`Full ${lang} translation is coming soon — the interface stays in English for now.`);
+    const current = (window.__i18n && window.__i18n.lang) || 'en';
+    const next = current === 'en' ? 'fr' : 'en';
+    if(window.__i18n && typeof window.__i18n.setLang === 'function') window.__i18n.setLang(next);
   });
   document.getElementById('pos_qaScan').addEventListener('click', () => scanBarcode());
 
@@ -6194,7 +6264,7 @@ window.__productVisualHTML = function(p, opts){
   document.getElementById('pos_qaPrint').addEventListener('click', () => {
     if(!cart.length){ alert('Cart is empty — nothing to print.'); return; }
     const subtotal = cart.reduce((s,i)=>s + i.price*i.qty, 0);
-    alert(`Printing current order — ${cart.reduce((s,i)=>s+i.qty,0)} item(s), ${subtotal.toFixed(2)} دج subtotal.`);
+    alert(`Printing current order — ${cart.reduce((s,i)=>s+i.qty,0)} item(s), ${subtotal.toFixed(2)} ${window.__essenceCurrencySymbol()} subtotal.`);
   });
 
   document.getElementById('pos_qaNewSale').addEventListener('click', () => {
@@ -6232,12 +6302,16 @@ window.__productVisualHTML = function(p, opts){
 
   // subtle parallax on product cards
   // ---------- Payment methods + Credit/Split customer assignment ----------
-  // ⚠️ إصلاح: knownCustomers كانت لائحة ديمو ثابتة (Sara Al-Masri/Lina Haddad/Karim Aoun/Yousef
-  // Nasser) بلا علاقة بالزبائن الحقيقيين ديال المحل — و"Assign new" ماكانش كيسجل الزبون الجديد
-  // فحتى مكان (يبان مرة وحدة، من بعد يختفي). دابا كتبنى من window.AppState.debts (نفس اللائحة
-  // الحقيقية المستعملة فـ Debts page)، وأي زبون جديد كيتزاد ليها + يتحفظ.
-  function getKnownCustomers(){
-    return (window.AppState.debts || []).map(d => ({ name: d.name, phone: (d.phone && d.phone !== '—') ? d.phone : '' }));
+  // ⚠️ مصلح: كانت `knownCustomers` لائحة ديمو ثابتة (Sara/Lina/Karim/Yousef) بلا علاقة بالمحل الحقيقي،
+  // وأي زبون جديد كيتزاد فالدرج (الاسم+الهاتف) ماكانش كيتحفظ حتى فحتة — كيضيع أول ما الدرج يتسكر.
+  // دابا عندنا مخزن حقيقي `window.AppState.customers` (كيتحفظ مع الباقي عبر persistNow)، وكندمجو معاه
+  // زبناء الدين المسجلين من قبل فـ Debts (نفس الشخص ماخاصوش يتكرر بجوج بطاقات).
+  if(!Array.isArray(window.AppState.customers)) window.AppState.customers = [];
+  function getCustomerDirectory(){
+    const dir = new Map();
+    window.AppState.customers.forEach(c => { if(c.phone) dir.set(c.phone, c); });
+    (window.AppState.debts||[]).forEach(d => { if(d.phone && d.phone!=='—' && !dir.has(d.phone)) dir.set(d.phone, {name:d.name, phone:d.phone}); });
+    return Array.from(dir.values());
   }
   const assignBackdrop = document.getElementById('pos_assignBackdrop');
   const assignList = document.getElementById('pos_assignList');
@@ -6245,7 +6319,7 @@ window.__productVisualHTML = function(p, opts){
 
   function renderAssignList(filter=''){
     const f = filter.trim().toLowerCase();
-    const matches = getKnownCustomers().filter(c => c.name.toLowerCase().includes(f));
+    const matches = getCustomerDirectory().filter(c => c.name.toLowerCase().includes(f) || (c.phone||'').includes(f));
     assignList.innerHTML = matches.map(c => `
       <div class="assign-existing" data-name="${c.name}" data-phone="${c.phone}">
         <div class="c-avatar">${c.name.split(' ').map(w=>w[0]).slice(0,2).join('')}</div>
@@ -6322,14 +6396,10 @@ window.__productVisualHTML = function(p, opts){
     const name = document.getElementById('pos_newDebtorName').value.trim();
     const phone = document.getElementById('pos_newDebtorPhone').value.trim();
     if(name && phone){
-      // ⚠️ إصلاح: كنسجلو الزبون الجديد فـ AppState.debts الحقيقية (بلا دين، 0.00) إذا ماكانش
-      // موجود من قبل — وإلا كان كيبان مرة وحدة بوحدها فهاد الجلسة ويختفي بعدها بلا أثر.
-      const debts = window.AppState.debts || (window.AppState.debts = []);
-      const exists = debts.find(d => d.name.toLowerCase() === name.toLowerCase() || (phone && d.phone === phone));
-      if(!exists){
-        debts.push({ name, phone: phone || '—', debt: 0, paid: 0, lastPayment: '—', invoices: [] });
+      // زبون جديد بلا تكرار (نفس الهاتف) → يتحفظ حقيقي فـ AppState.customers باش يبان المرة الجاية
+      if(!getCustomerDirectory().some(c => c.phone === phone)){
+        window.AppState.customers.push({ name, phone });
         if(window.__persistAppState) window.__persistAppState();
-        if(window.__essenceSyncDebtsToSupabase) window.__essenceSyncDebtsToSupabase();
       }
       confirmAssign(name, phone);
     }
@@ -6421,8 +6491,8 @@ window.__productVisualHTML = function(p, opts){
       </td>
       <td class="mono" style="color:var(--text-faint); font-size:12px;">${p.sku}</td>
       <td><span class="cat-pill">${p.cat}</span></td>
-      <td class="num price-cell">${p.price} دج</td>
-      <td class="num cost-cell">${p.cost} دج</td>
+      <td class="num price-cell">${p.price} ${window.__essenceCurrencySymbol()}</td>
+      <td class="num cost-cell">${p.cost} ${window.__essenceCurrencySymbol()}</td>
       <td>
         <div class="stock-cell">
           <div class="stock-bar"><div class="stock-bar-fill" style="width:${pct}%; background:${barColor(p.stock)}"></div></div>
@@ -6461,8 +6531,8 @@ window.__productVisualHTML = function(p, opts){
       <div class="pc-name">${p.name}</div>
       <div class="pc-brand">${p.brand}</div>
       <div class="pc-meta">
-        <span class="pc-price">${p.price} دج</span>
-        <span class="pc-cost">Cost: ${p.cost} دج</span>
+        <span class="pc-price">${p.price} ${window.__essenceCurrencySymbol()}</span>
+        <span class="pc-cost">Cost: ${p.cost} ${window.__essenceCurrencySymbol()}</span>
       </div>
       <div class="stock-cell">
         <div class="stock-bar"><div class="stock-bar-fill" style="width:${pct}%; background:${barColor(p.stock)}"></div></div>
@@ -6494,11 +6564,11 @@ window.__productVisualHTML = function(p, opts){
   function renderStats(){
     document.getElementById('products_statTotal').textContent = products.length;
     const totalValue = products.reduce((s,p)=>s + p.price*p.stock, 0);
-    document.getElementById('products_statValue').textContent = (totalValue/1000).toFixed(1) + 'K دج';
+    document.getElementById('products_statValue').textContent = (totalValue/1000).toFixed(1) + 'K ' + window.__essenceCurrencySymbol();
     document.getElementById('products_statLow').textContent = products.filter(p=>p.stock>0 && p.stock<=10).length;
     document.getElementById('products_statCats').textContent = new Set(products.map(p=>p.cat)).size;
     document.getElementById('products_pageSub').textContent =
-      `${products.length} products across ${new Set(products.map(p=>p.cat)).size} categories · ${totalValue.toLocaleString()} دج total inventory value`;
+      `${products.length} products across ${new Set(products.map(p=>p.cat)).size} categories · ${totalValue.toLocaleString()} ${window.__essenceCurrencySymbol()} total inventory value`;
   }
 
   function renderAll(){
@@ -6722,7 +6792,7 @@ window.__productVisualHTML = function(p, opts){
     const sell = parseFloat(saleInput.value) || 0;
     const profit = sell - buy;
     const pct = buy > 0 ? (profit / buy) * 100 : 0;
-    profitAmount.textContent = (profit < 0 ? '-' : '') + Math.abs(profit).toFixed(2) + ' دج';
+    profitAmount.textContent = (profit < 0 ? '-' : '') + Math.abs(profit).toFixed(2) + ' ' + window.__essenceCurrencySymbol();
     profitAmount.style.color = profit >= 0 ? 'var(--success)' : 'var(--error)';
     profitPercent.textContent = pct.toFixed(1) + '%';
   }
@@ -7212,7 +7282,7 @@ window.__productVisualHTML = function(p, opts){
       <td class="mono" style="font-size:12px;">${s.phone || '—'}</td>
       <td><span class="cat-pill">${s.cat}</span></td>
       <td class="num">${s.products || 0}</td>
-      <td class="num">${owed > 0 ? `<span class="debt-amount">${owed.toFixed(2)} دج</span>` : `<span class="paid-amount">0.00 دج</span>`}</td>
+      <td class="num">${owed > 0 ? `<span class="debt-amount">${owed.toFixed(2)} ${window.__essenceCurrencySymbol()}</span>` : `<span class="paid-amount">0.00 ${window.__essenceCurrencySymbol()}</span>`}</td>
       <td><span class="status-badge ${st.cls}">${st.label}</span></td>
       <td>
         <div class="row-actions">
@@ -7340,14 +7410,14 @@ window.__productVisualHTML = function(p, opts){
     document.getElementById('suppliers_debtAvatar').textContent = initialsOfSupplier(s.name);
     document.getElementById('suppliers_debtName').textContent = s.name;
     document.getElementById('suppliers_debtPhone').textContent = s.phone || '—';
-    document.getElementById('suppliers_debtTotal').textContent = (s.owed || 0).toFixed(2) + ' دج';
+    document.getElementById('suppliers_debtTotal').textContent = (s.owed || 0).toFixed(2) + ' ' + window.__essenceCurrencySymbol();
     const invoices = s.invoices || [];
     document.getElementById('suppliers_debtInvoices').innerHTML = invoices.length
       ? invoices.map(inv => `
       <div class="debt-invoice">
         <div class="debt-invoice-icon"><i data-lucide="receipt"></i></div>
         <div class="debt-invoice-info"><div class="debt-invoice-id">#${inv.id}</div><div class="debt-invoice-date">${inv.date}</div></div>
-        <div class="debt-invoice-amt"><div class="rem">${inv.remaining.toFixed(2)} دج</div><div class="paid">${tf('suppliers.paidLabel', {amount: inv.paid.toFixed(2)})}</div></div>
+        <div class="debt-invoice-amt"><div class="rem">${inv.remaining.toFixed(2)} ${window.__essenceCurrencySymbol()}</div><div class="paid">${tf('suppliers.paidLabel', {amount: inv.paid.toFixed(2)})}</div></div>
       </div>`).join('')
       : `<p style="font-size:12px; color:var(--text-faint); text-align:center; padding:16px 0;">${t('suppliers.noInvoicesYet')}</p>`;
     document.getElementById('suppliers_debtPaymentInput').value = '';
@@ -7436,8 +7506,8 @@ window.__productVisualHTML = function(p, opts){
     <tr data-index="${i}">
       <td><div class="debtor-cell"><div class="debtor-avatar">${initials(d.name)}</div><div><div class="debtor-name">${d.name}</div><div class="debtor-phone">${d.phone}</div></div></div></td>
       <td><span style="font-size:12px; color:var(--text-dim);">${tf(d.invoices.length===1?'debts.invoiceOne':'debts.invoiceOther', {n:d.invoices.length})}</span></td>
-      <td class="num"><span class="debt-amount">${d.debt.toFixed(2)} دج</span></td>
-      <td class="num"><span class="paid-amount">${d.paid.toFixed(2)} دج</span></td>
+      <td class="num"><span class="debt-amount">${d.debt.toFixed(2)} ${window.__essenceCurrencySymbol()}</span></td>
+      <td class="num"><span class="paid-amount">${d.paid.toFixed(2)} ${window.__essenceCurrencySymbol()}</span></td>
       <td><span style="font-size:12px; color:var(--text-dim);">${d.lastPayment}</span></td>
       <td><span class="status-badge ${s.cls}">${s.label}</span></td>
       <td><div class="row-actions">
@@ -7470,10 +7540,10 @@ window.__productVisualHTML = function(p, opts){
     const overdueTotal = debtors.filter(d=>statusOf(d).cls==='overdue').reduce((s,d)=>s+d.debt,0);
     const totalCollected = debtors.reduce((s,d)=>s+(d.paid||0),0);
     const statVals = document.querySelectorAll('#panel_debts .stat-value');
-    if(statVals[0]) statVals[0].textContent = totalOutstanding.toLocaleString(undefined,{minimumFractionDigits:0}) + ' دج';
+    if(statVals[0]) statVals[0].textContent = totalOutstanding.toLocaleString(undefined,{minimumFractionDigits:0}) + ' ' + window.__essenceCurrencySymbol();
     if(statVals[1]) statVals[1].textContent = activeCount;
-    if(statVals[2]) statVals[2].textContent = overdueTotal.toLocaleString(undefined,{minimumFractionDigits:0}) + ' دج';
-    if(statVals[3]) statVals[3].textContent = totalCollected.toLocaleString(undefined,{minimumFractionDigits:0}) + ' دج';
+    if(statVals[2]) statVals[2].textContent = overdueTotal.toLocaleString(undefined,{minimumFractionDigits:0}) + ' ' + window.__essenceCurrencySymbol();
+    if(statVals[3]) statVals[3].textContent = totalCollected.toLocaleString(undefined,{minimumFractionDigits:0}) + ' ' + window.__essenceCurrencySymbol();
 
     window.__lucideCreateIcons();
   }
@@ -7505,12 +7575,12 @@ window.__productVisualHTML = function(p, opts){
     document.getElementById('debts_dAvatar').textContent = initials(d.name);
     document.getElementById('debts_dName').textContent = d.name;
     document.getElementById('debts_dPhone').textContent = d.phone;
-    document.getElementById('debts_dTotal').textContent = d.debt.toFixed(2) + ' دج';
+    document.getElementById('debts_dTotal').textContent = d.debt.toFixed(2) + ' ' + window.__essenceCurrencySymbol();
     document.getElementById('debts_dInvoices').innerHTML = d.invoices.map(inv => `
       <div class="debt-invoice">
         <div class="debt-invoice-icon"><i data-lucide="receipt"></i></div>
         <div class="debt-invoice-info"><div class="debt-invoice-id">#${inv.id}</div><div class="debt-invoice-date">${inv.date}</div></div>
-        <div class="debt-invoice-amt"><div class="rem">${inv.remaining.toFixed(2)} دج</div><div class="paid">${tf('debts.paidLabel', {amount: inv.paid.toFixed(2)})}</div></div>
+        <div class="debt-invoice-amt"><div class="rem">${inv.remaining.toFixed(2)} ${window.__essenceCurrencySymbol()}</div><div class="paid">${tf('debts.paidLabel', {amount: inv.paid.toFixed(2)})}</div></div>
       </div>`).join('');
     document.getElementById('debts_paymentInput').value = '';
     window.__lucideCreateIcons();
@@ -7659,7 +7729,7 @@ window.__productVisualHTML = function(p, opts){
       <td><span class="items-preview">${itemsLabel}</span></td>
       <td><span class="pay-pill"><i data-lucide="${paymentIcon(s.payment)}"></i>${paymentLabel(s.payment)}</span></td>
       <td><span class="emp-cell">${s.employee}</span></td>
-      <td class="num total-cell">${total.toFixed(2)} دج</td>
+      <td class="num total-cell">${total.toFixed(2)} ${window.__essenceCurrencySymbol()}</td>
       <td><span class="status-badge ${s.status}">${statusLabel(s.status)}</span></td>
       <td>
         <div class="row-actions">
@@ -7768,23 +7838,23 @@ window.__productVisualHTML = function(p, opts){
         <div class="inv-item-img"><i data-lucide="package" style="width:16px;height:16px;"></i></div>
         <div class="inv-item-info">
           <div class="inv-item-name">${i.name}</div>
-          <div class="inv-item-qty mono">${i.qty} × ${i.price.toFixed(2)} دج</div>
+          <div class="inv-item-qty mono">${i.qty} × ${i.price.toFixed(2)} ${window.__essenceCurrencySymbol()}</div>
         </div>
-        <div class="inv-item-sub">${(i.qty*i.price).toFixed(2)} دج</div>
+        <div class="inv-item-sub">${(i.qty*i.price).toFixed(2)} ${window.__essenceCurrencySymbol()}</div>
       </div>`).join('');
 
     const f = window.__saleFinancials(sale);
-    document.getElementById('sales_sSubtotal').textContent = f.subtotal.toFixed(2) + ' دج';
-    document.getElementById('sales_sDiscount').textContent = '−' + f.discount.toFixed(2) + ' دج';
-    document.getElementById('sales_sTax').textContent = f.tax.toFixed(2) + ' دج';
-    document.getElementById('sales_sTotal').textContent = f.total.toFixed(2) + ' دج';
+    document.getElementById('sales_sSubtotal').textContent = f.subtotal.toFixed(2) + ' ' + window.__essenceCurrencySymbol();
+    document.getElementById('sales_sDiscount').textContent = '−' + f.discount.toFixed(2) + ' ' + window.__essenceCurrencySymbol();
+    document.getElementById('sales_sTax').textContent = f.tax.toFixed(2) + ' ' + window.__essenceCurrencySymbol();
+    document.getElementById('sales_sTotal').textContent = f.total.toFixed(2) + ' ' + window.__essenceCurrencySymbol();
 
     // Split payment: كنبينو قداش تخلص دابا وقداش بقى دين — بيانات قديمة بلا paidNow/creditAmount ماعندهاش breakdown
     const splitBox = document.getElementById('sales_splitBreakdown');
     if(sale.payment === 'Split' && typeof sale.paidNow === 'number' && typeof sale.creditAmount === 'number'){
       splitBox.innerHTML = `
-        <div class="sum-row"><span style="color:var(--success);">${t('sales.paidNowLabel')}</span><span style="color:var(--success);">${sale.paidNow.toFixed(2)} دج</span></div>
-        <div class="sum-row"><span style="color:var(--gold);">${t('sales.remainingCreditLabel')}</span><span style="color:var(--gold);">${sale.creditAmount.toFixed(2)} دج</span></div>`;
+        <div class="sum-row"><span style="color:var(--success);">${t('sales.paidNowLabel')}</span><span style="color:var(--success);">${sale.paidNow.toFixed(2)} ${window.__essenceCurrencySymbol()}</span></div>
+        <div class="sum-row"><span style="color:var(--gold);">${t('sales.remainingCreditLabel')}</span><span style="color:var(--gold);">${sale.creditAmount.toFixed(2)} ${window.__essenceCurrencySymbol()}</span></div>`;
     } else if(sale.payment === 'Split'){
       splitBox.innerHTML = `<div class="sum-row" style="color:var(--text-faint); font-size:12px;"><span>${t('sales.splitNotAvailable')}</span></div>`;
     } else {
@@ -7971,7 +8041,7 @@ window.__productVisualHTML = function(p, opts){
     const totalValue = Object.values(stockLevels).reduce((s,v)=>s+v,0) * 320; // rough avg price
     const low = Object.values(stockLevels).filter(v=>v>0 && v<=10).length;
     const out = Object.values(stockLevels).filter(v=>v===0).length;
-    const valueLabel = (totalValue/1000).toFixed(1) + 'K دج';
+    const valueLabel = (totalValue/1000).toFixed(1) + 'K ' + window.__essenceCurrencySymbol();
     const statVals = document.querySelectorAll('#panel_stock .stat-value');
     if(statVals[0]) statVals[0].textContent = valueLabel;
     if(statVals[1]) statVals[1].textContent = low;
@@ -8126,7 +8196,7 @@ window.__productVisualHTML = function(p, opts){
     if(liveProduct) liveProduct.stock = newStock; // كايبان مباشرة فـ Products وPOS بلا refresh
     movements.unshift({
       name, sku: skuByName[name] || 'N/A', type, qty: signedQty, reason,
-      who: 'Rania S.', time: 'Just now', c1:'#7C5CFF'
+      who: window.__essenceActorName(), time: 'Just now', c1:'#7C5CFF'
     });
 
     closeDrawer();
@@ -8188,9 +8258,9 @@ window.__productVisualHTML = function(p, opts){
     // المجموع الكلي (all-time) حاليا، بدل ما نفبركو أرقام مختلفة.
     const todayTotal = expenses.filter(e => e.date === TODAY_LABEL || e.day === TODAY_LABEL).reduce((s,e)=>s+e.amount,0);
     const allTimeTotal = expenses.reduce((s,e)=>s+e.amount,0);
-    document.getElementById('expenses_statToday').textContent = todayTotal.toFixed(0) + ' دج';
-    document.getElementById('expenses_statWeek').textContent = allTimeTotal.toFixed(0) + ' دج';
-    document.getElementById('expenses_statMonth').textContent = allTimeTotal.toFixed(0) + ' دج';
+    document.getElementById('expenses_statToday').textContent = todayTotal.toFixed(0) + ' ' + window.__essenceCurrencySymbol();
+    document.getElementById('expenses_statWeek').textContent = allTimeTotal.toFixed(0) + ' ' + window.__essenceCurrencySymbol();
+    document.getElementById('expenses_statMonth').textContent = allTimeTotal.toFixed(0) + ' ' + window.__essenceCurrencySymbol();
 
     const catTotals = {};
     expenses.forEach(e => { catTotals[e.cat] = (catTotals[e.cat]||0) + e.amount; });
@@ -8209,12 +8279,12 @@ window.__productVisualHTML = function(p, opts){
         <td><span class="cat-pill" style="background:${colorFor(e.cat)}18; color:${colorFor(e.cat)};"><span class="dot" style="background:${colorFor(e.cat)}"></span>${e.cat}</span></td>
         <td><span class="exp-desc">${e.desc}</span></td>
         <td><div class="exp-employee"><div class="exp-emp-avatar">${initials(e.employee)}</div><span class="exp-emp-name">${e.employee}</span></div></td>
-        <td class="num"><span class="exp-amount">-${e.amount.toFixed(2)} دج</span></td>
+        <td class="num"><span class="exp-amount">-${e.amount.toFixed(2)} ${window.__essenceCurrencySymbol()}</span></td>
         <td><div class="row-actions"><button title="${t('common.edit')}" data-act="edit" data-idx="${realIdx}"><i data-lucide="pencil"></i></button><button title="${t('common.delete')}" class="danger" data-act="del" data-idx="${realIdx}"><i data-lucide="trash-2"></i></button></div></td>
       </tr>`;
     }).join('') || `<tr><td colspan="6" style="text-align:center; color:var(--text-faint); padding:30px;">${t('expenses.noMatch')}</td></tr>`;
     const total = rows.reduce((s,e)=>s+e.amount,0);
-    document.getElementById('expenses_footTotal').textContent = total.toFixed(2) + ' دج';
+    document.getElementById('expenses_footTotal').textContent = total.toFixed(2) + ' ' + window.__essenceCurrencySymbol();
     document.getElementById('expenses_footShowing').textContent = tf('expenses.showing', {a: rows.length, n: expenses.length});
     renderStats();
     window.__lucideCreateIcons();
@@ -8296,6 +8366,8 @@ window.__productVisualHTML = function(p, opts){
     catSelect.selectedIndex = 0;
     dateInput.value = window.__todayISO();
     document.querySelectorAll('.method-chip').forEach((x,i) => x.classList.toggle('active', i===0));
+    const curEl = document.getElementById('expenses_amountCur');
+    if(curEl) curEl.textContent = window.__essenceCurrencySymbol();
   }
 
   function openDrawerForAdd(){
@@ -8337,7 +8409,7 @@ window.__productVisualHTML = function(p, opts){
       const dateLabel = d.toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'});
       // id + dateISO مزادين هنا (ماكانوش قبل) باش يتزامنو صح مع Supabase (id=uuid ضروري للـ upsert،
       // dateISO خاصها تتبعت كـ created_at حقيقي بدل ما نخليو Supabase يحط now() لكل صف بلا فرق بينهم).
-      expenses.unshift({ id: crypto.randomUUID(), date: dateLabel, dateISO: dateInput.value || window.__todayISO(), day: 'Today', cat, desc, employee: 'You', amount });
+      expenses.unshift({ id: crypto.randomUUID(), date: dateLabel, dateISO: dateInput.value || window.__todayISO(), day: 'Today', cat, desc, employee: window.__essenceActorName(), amount });
       // راس المال ينقص بكامل المصروف وقت التسجيل
       window.AppState.capital = (window.AppState.capital || 0) - amount;
       (window.AppState.capitalMovements = window.AppState.capitalMovements || []).unshift({
@@ -8390,7 +8462,7 @@ window.__productVisualHTML = function(p, opts){
 
   const CAT_COLORS = ['#7C5CFF','#C8A04A','#a78bfa','#8a6b2e','#F87171','#34D399','#5da3f0'];
 
-  function money(n){ return window.__money(n); }
+  function money(n){ return Math.round(n||0).toLocaleString() + ' ' + window.__essenceCurrencySymbol(); }
   function saleTotal(s){
     if(window.__saleFinancials) return window.__saleFinancials(s).total;
     return s.items.reduce((x,i)=>x + i.qty*i.price, 0);
@@ -8425,10 +8497,19 @@ window.__productVisualHTML = function(p, opts){
     const todayGrossProfit = todaySales.reduce((s,sl)=>s+saleProfit(sl,products),0);
     const todayExpenses = expenses.filter(e => e.date === TODAY_LABEL || e.day === TODAY_LABEL).reduce((s,e)=>s+(e.amount||0),0);
     const todayNet = todayGrossProfit - todayExpenses;
-    document.getElementById('reports_todayIncome').textContent = Math.round(todayIncome).toLocaleString() + ' دج';
-    document.getElementById('reports_todayExpenses').textContent = Math.round(todayExpenses).toLocaleString() + ' دج';
-    document.getElementById('reports_todayProfit').textContent = Math.round(todayGrossProfit).toLocaleString() + ' دج';
-    document.getElementById('reports_todayNetProfit').textContent = Math.round(todayNet).toLocaleString() + ' دج';
+    document.getElementById('reports_todayIncome').textContent = Math.round(todayIncome).toLocaleString() + ' ' + window.__essenceCurrencySymbol();
+    document.getElementById('reports_todayExpenses').textContent = Math.round(todayExpenses).toLocaleString() + ' ' + window.__essenceCurrencySymbol();
+    document.getElementById('reports_todayProfit').textContent = Math.round(todayGrossProfit).toLocaleString() + ' ' + window.__essenceCurrencySymbol();
+    document.getElementById('reports_todayNetProfit').textContent = Math.round(todayNet).toLocaleString() + ' ' + window.__essenceCurrencySymbol();
+    // ---- عرض الكاشير (بديل بلا cost/margin): عدد حركات البيع اليوم + المبلغ بعد المصاريف بوحدها
+    // (income - expenses، بلا أي حساب ديال الربح/التكلفة) ----
+    const todayExpensesCount = expenses.filter(e => e.date === TODAY_LABEL || e.day === TODAY_LABEL).length;
+    const todayTxnCount = todaySales.length + todayExpensesCount;
+    const todayNetSimple = todayIncome - todayExpenses;
+    const txnCountEl = document.getElementById('reports_todayTxnCount');
+    const netSimpleEl = document.getElementById('reports_todayNetSimple');
+    if(txnCountEl) txnCountEl.textContent = String(todayTxnCount);
+    if(netSimpleEl) netSimpleEl.textContent = Math.round(todayNetSimple).toLocaleString() + ' ' + window.__essenceCurrencySymbol();
     // النسب (+6.2% إلخ) كانت مفبركة بلا أي مقارنة حقيقية بيوم سابق — خبيناها بدل ما نختلقو أرقام.
     ['reports_todayIncomeTrend','reports_todayExpensesTrend','reports_todayProfitTrend','reports_todayNetProfitTrend'].forEach(id => {
       const el = document.getElementById(id);
@@ -8452,7 +8533,7 @@ window.__productVisualHTML = function(p, opts){
           <div class="period-tile-icon ${t2.cls}"><i data-lucide="${t2.icon}"></i></div>
           <div class="period-tile-label">${t2.label}</div>
         </div>
-        <div class="period-tile-value">${Math.round(t2.value).toLocaleString()} دج</div>
+        <div class="period-tile-value">${Math.round(t2.value).toLocaleString()} ${window.__essenceCurrencySymbol()}</div>
       </div>`).join('');
     window.__lucideCreateIcons();
 
@@ -8536,14 +8617,14 @@ window.__productVisualHTML = function(p, opts){
     /* ---------- Profit margin donut (حسب الفئة، من البيوعات الحقيقية) ---------- */
     const catNames = Object.keys(catAgg);
     const donutSvg = document.getElementById('reports_donutChart');
+    const marginPctEl = donutSvg.closest('.donut-center').querySelector('.pct');
+    {
+      const totalRev = Object.values(catAgg).reduce((s,c)=>s+c.revenue,0);
+      const totalCost = Object.values(catAgg).reduce((s,c)=>s+c.cost,0);
+      const blendedMargin = totalRev > 0 ? ((totalRev-totalCost)/totalRev*100) : 0;
+      if(marginPctEl) marginPctEl.textContent = blendedMargin.toFixed(1) + '%';
+    }
     const R = 78, CX = 90, CY = 90, STROKE = 20;
-    // ⚠️ إصلاح: "39.7%" كانت رقم ثابت هاردكودد فـ HTML، ماكانتش كتتبدل حتى بيع/فئة تتزاد — دابا
-    // Blended Margin حقيقي = (مجموع الإيراد - مجموع الكلفة) / مجموع الإيراد، محسوب من catAgg.
-    const blendedRevenue = Object.values(catAgg).reduce((s,c)=>s+c.revenue,0);
-    const blendedCost = Object.values(catAgg).reduce((s,c)=>s+c.cost,0);
-    const blendedPct = blendedRevenue > 0 ? ((blendedRevenue - blendedCost) / blendedRevenue * 100) : 0;
-    const pctEl = document.getElementById('reports_donutPct');
-    if(pctEl) pctEl.textContent = blendedPct.toFixed(1) + '%';
     if(catNames.length === 0){
       donutSvg.innerHTML = `<circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="var(--fill-2)" stroke-width="${STROKE}"/>`;
       document.getElementById('reports_donutLegend').innerHTML = `<div style="padding:10px 2px; color:var(--text-faint); font-size:13px;">${t('reports.noSalesYet')}</div>`;
@@ -8608,14 +8689,15 @@ window.__productVisualHTML = function(p, opts){
       return `
       <tr>
         <td><div class="cat-name"><div class="cat-dot" style="background:${CAT_COLORS[idx % CAT_COLORS.length]}"></div>${cat}</div></td>
-        <td class="num mono">${Math.round(r.cost).toLocaleString()} دج</td>
-        <td class="num mono">${Math.round(r.revenue).toLocaleString()} دج</td>
-        <td class="num mono" style="font-weight:700;">${Math.round(rowProfit).toLocaleString()} دج</td>
+        <td class="num mono">${Math.round(r.cost).toLocaleString()} ${window.__essenceCurrencySymbol()}</td>
+        <td class="num mono">${Math.round(r.revenue).toLocaleString()} ${window.__essenceCurrencySymbol()}</td>
+        <td class="num mono" style="font-weight:700;">${Math.round(rowProfit).toLocaleString()} ${window.__essenceCurrencySymbol()}</td>
         <td class="num"><span class="margin-pill" style="color:${marginColor}; background:${marginColor}18;">${margin.toFixed(1)}%</span></td>
       </tr>`;
     }).join('') : `<tr><td colspan="5" style="text-align:center; color:var(--text-faint); padding:24px;">${t('reports.noSalesYet')}</td></tr>`;
 
     renderCapital();
+    if(window.__essenceApplyReportsRoleGating) window.__essenceApplyReportsRoleGating();
     window.__lucideCreateIcons();
   }
 
@@ -8628,7 +8710,7 @@ window.__productVisualHTML = function(p, opts){
   function renderCapital(){
     const cap = window.AppState.capital || 0;
     const el = document.getElementById('reports_capitalValue');
-    el.textContent = Math.round(cap).toLocaleString() + ' دج';
+    el.textContent = Math.round(cap).toLocaleString() + ' ' + window.__essenceCurrencySymbol();
     el.style.color = cap < 0 ? 'var(--error)' : '';
     const sub = document.getElementById('reports_capitalModalSub');
     if(sub) sub.textContent = tf('reports.currentBalance', {amount: Math.round(cap).toLocaleString()});
@@ -8660,7 +8742,7 @@ window.__productVisualHTML = function(p, opts){
       <div class="debt-invoice">
         <div class="debt-invoice-icon"><i data-lucide="${CAP_MOVEMENT_ICON[m.type] || 'circle-dollar-sign'}"></i></div>
         <div class="debt-invoice-info"><div class="debt-invoice-id">${m.note}</div><div class="debt-invoice-date">${m.date} · ${m.time}</div></div>
-        <div class="debt-invoice-amt"><div class="rem" style="color:${m.amount >= 0 ? 'var(--success)' : 'var(--error)'};">${m.amount >= 0 ? '+' : ''}${Math.round(m.amount).toLocaleString()} دج</div></div>
+        <div class="debt-invoice-amt"><div class="rem" style="color:${m.amount >= 0 ? 'var(--success)' : 'var(--error)'};">${m.amount >= 0 ? '+' : ''}${Math.round(m.amount).toLocaleString()} ${window.__essenceCurrencySymbol()}</div></div>
       </div>`).join('') : `<p style="font-size:12px; color:var(--text-faint); text-align:center; padding:24px 0;">${t('reports.noCapitalHistory')}</p>`;
     window.__lucideCreateIcons();
   }
@@ -8784,9 +8866,9 @@ window.__productVisualHTML = function(p, opts){
     const avgBasketTrendEl = document.getElementById('analytics_avgBasketTrend');
     if(sales.length){
       const avgBasket = sales.reduce((s,sl)=>s+saleTotal(sl), 0) / sales.length;
-      avgBasketEl.textContent = avgBasket.toLocaleString(undefined, { maximumFractionDigits: 0 }) + ' دج';
+      avgBasketEl.textContent = avgBasket.toLocaleString(undefined, { maximumFractionDigits: 0 }) + ' ' + window.__essenceCurrencySymbol();
     } else {
-      avgBasketEl.textContent = '0 دج';
+      avgBasketEl.textContent = '0 ' + window.__essenceCurrencySymbol();
     }
     // النسبة (+11%) كانت مفبركة بلا أي مقارنة حقيقية بفترة سابقة — خبيناها (نفس نمط Reports).
     if(avgBasketTrendEl) avgBasketTrendEl.style.display = 'none';
@@ -8852,11 +8934,9 @@ window.__productVisualHTML = function(p, opts){
     const payCounts = {};
     sales.forEach(s => { const p = s.payment || 'Cash'; payCounts[p] = (payCounts[p]||0) + 1; });
     const payNames = Object.keys(payCounts);
-    // ⚠️ إصلاح: "412" كانت رقم ثابت هاردكودد فـ HTML، ماكانتش كتتبدل حتى بيع يتزاد — دابا عدد
-    // المعاملات الحقيقي (sales.length).
-    const payDonutPctEl = document.getElementById('analytics_payDonutPct');
-    if(payDonutPctEl) payDonutPctEl.textContent = sales.length.toLocaleString();
     const donutSvg = document.getElementById('analytics_payDonut');
+    const payDonutPctEl = document.querySelector('#analytics_payDonut').closest('.donut-center').querySelector('.pct');
+    if(payDonutPctEl) payDonutPctEl.textContent = sales.length.toLocaleString();
     const R = 78, CX = 90, CY = 90, STROKE = 20;
     if(payNames.length === 0){
       donutSvg.innerHTML = `<circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="var(--fill-2)" stroke-width="${STROKE}"/>`;
@@ -8878,7 +8958,7 @@ window.__productVisualHTML = function(p, opts){
         <div class="donut-legend-row"><div class="dot" style="background:${d.color}"></div><div class="name">${PAYMENT_KEY_MAP[d.name] ? t(PAYMENT_KEY_MAP[d.name]) : d.name}</div><div class="val">${Math.round(d.count/totalPay*100)}%</div></div>`).join('');
     }
 
-    /* ---------- Employee leaderboard (من sale.employee الحقيقي — ⚠️ بلا نظام login حقيقي كيبين غير "You") ---------- */
+    /* ---------- Employee leaderboard (من sale.employee الحقيقي — دابا معمر باسم store_members الحقيقي عبر __essenceActorName وقت البيع، fallback 'You' غير للبيوعات القديمة/local-only) ---------- */
     const empAgg = {};
     sales.forEach(s => {
       const name = s.employee || 'You';
@@ -8896,7 +8976,7 @@ window.__productVisualHTML = function(p, opts){
           <div class="rank-name">${e.name}</div>
           <div class="rank-bar-track"><div class="rank-bar-fill" style="width:${(e.revenue/maxEmpRev*100).toFixed(0)}%"></div></div>
         </div>
-        <div class="rank-right"><div class="rank-value">${Math.round(e.revenue).toLocaleString()} دج</div><div class="rank-sub">${tf('analytics.salesUnit', {n: e.sales})}</div></div>
+        <div class="rank-right"><div class="rank-value">${Math.round(e.revenue).toLocaleString()} ${window.__essenceCurrencySymbol()}</div><div class="rank-sub">${tf('analytics.salesUnit', {n: e.sales})}</div></div>
       </div>`).join('') : `<div style="padding:20px; text-align:center; color:var(--text-faint); font-size:13px;">${t('analytics.noSalesYet')}</div>`;
 
     /* ---------- Frequently bought together (تقاطع حقيقي بين الأصناف عبر البيوعات) ---------- */
@@ -8967,14 +9047,12 @@ window.__productVisualHTML = function(p, opts){
   function syncCoreFieldsFromState(){
     document.getElementById('settings_taxRate').value = window.AppState.settings.taxRate;
     document.getElementById('settings_storeName').value = window.AppState.settings.storeName;
-    const cur = window.AppState.settings.currency;
-    document.getElementById('settings_currency').value = (typeof cur === 'string' && cur) ? cur : 'DZD';
-    // ⚠️ إصلاح: address/phone/email كانو غير DOM values (hardcoded فـ HTML)، ماكانوش جزء من
-    // AppState.settings أبدا — الحفظ (saveAllChanges) كان كيقراهم بصح ما كيكتبهمش فـ AppState، فـ
-    // refresh كانو يرجعو للقيم الديمو المكتوبة فـ HTML (value="..."). دابا حقيقيين وكيتحفظو.
+    document.getElementById('settings_currency').selectedIndex = window.AppState.settings.currency || 0;
     document.getElementById('settings_address').value = window.AppState.settings.address || '';
     document.getElementById('settings_phone').value = window.AppState.settings.phone || '';
     document.getElementById('settings_email').value = window.AppState.settings.email || '';
+    const thInput = document.getElementById('settings_largeExpenseThreshold');
+    if(thInput) thInput.value = window.AppState.settings.largeExpenseThreshold ?? 500;
   }
   syncCoreFieldsFromState();
 
@@ -9006,23 +9084,18 @@ window.__productVisualHTML = function(p, opts){
     });
   });
 
-  /* ---------- Large expense flag threshold (كان رقم ثابت "500" هاردكودد فالكود، بلا ما يقدر
-     صاحب المحل يبدلو — دابا input حقيقي مربوط بـ window.AppState.settings.largeExpenseThreshold) ---------- */
-  const largeExpenseInput = document.getElementById('settings_largeExpenseThreshold');
-  function renderLargeExpenseSub(){
-    const amount = (typeof window.AppState.settings.largeExpenseThreshold === 'number') ? window.AppState.settings.largeExpenseThreshold : 500;
-    if(largeExpenseInput) largeExpenseInput.value = amount;
-    document.getElementById('settings_largeExpenseSub').textContent = tf('settings.largeExpenseSub', {amount});
+  /* ---------- Large expense flag threshold: كان رقم ثابت 500 بلا ما يترجم ولا يتحسب ولا يتبدل —
+     دابا رقم حقيقي قابل للتعديل من input جديد، محفوظ فـ AppState.settings.largeExpenseThreshold ---------- */
+  function updateLargeExpenseLabel(){
+    const amount = window.AppState.settings.largeExpenseThreshold ?? 500;
+    document.getElementById('settings_largeExpenseSub').textContent =
+      tf('settings.largeExpenseSub', {amount}).replace(/دج\s*$/, '').trim() + ' ' + window.__essenceCurrencySymbol();
   }
-  renderLargeExpenseSub();
+  updateLargeExpenseLabel();
+  const largeExpenseInput = document.getElementById('settings_largeExpenseThreshold');
   if(largeExpenseInput){
-    largeExpenseInput.addEventListener('input', () => {
-      const parsed = parseFloat(largeExpenseInput.value);
-      window.AppState.settings.largeExpenseThreshold = isNaN(parsed) ? 0 : parsed;
-      document.getElementById('settings_largeExpenseSub').textContent = tf('settings.largeExpenseSub', {amount: window.AppState.settings.largeExpenseThreshold});
-      markDirty();
-      if(window.__persistAppState) window.__persistAppState();
-    });
+    largeExpenseInput.value = window.AppState.settings.largeExpenseThreshold ?? 500;
+    largeExpenseInput.addEventListener('input', () => { updateLargeExpenseLabel(); markDirty(); });
   }
 
   /* ---------- Dirty-state tracking ---------- */
@@ -9043,7 +9116,7 @@ window.__productVisualHTML = function(p, opts){
     storeName:'Essence — Luxury Perfumes', currency:0, taxRate:0,
     address:'Al Baraka Mall, Downtown, 3rd Floor', phone:'+971 4 555 0192', email:'hello@essence-perfumes.com',
     printer:0, paper:0, receiptFooter:'Thank you for shopping with Essence. All sales final after 14 days.',
-    logoHtml:'<svg fill="none" stroke-linecap="round" stroke-width="2" viewbox="0 0 24 24"><path d="M12 2v6M9 8h6l1.5 3.5a5 5 0 11-9 0z"></path></svg>',
+    logoHtml:'',
   };
   const factoryToggleStates = [true, true, false, true, true, false, true, true]; // t=1..8 in DOM order
   const factoryBranches = () => ([
@@ -9258,9 +9331,9 @@ window.__productVisualHTML = function(p, opts){
       ${h2 ? `<div>${h2}</div>` : ''}
       <div style="border-top:1px dashed #999; margin:8px 0;"></div>
       <div>${t('settings.previewInvoiceSample')}</div>
-      <div style="text-align:left; margin:8px 0;">${t('settings.previewItemSample')} &nbsp;&nbsp;&nbsp; 1200.00 دج</div>
+      <div style="text-align:left; margin:8px 0;">${t('settings.previewItemSample')} &nbsp;&nbsp;&nbsp; 1200.00 ${window.__essenceCurrencySymbol()}</div>
       <div style="border-top:1px dashed #999; margin:8px 0;"></div>
-      <div style="font-weight:700;">${t('receipt.totalLabel')} &nbsp; 1200.00 دج</div>
+      <div style="font-weight:700;">${t('receipt.totalLabel')} &nbsp; 1200.00 ${window.__essenceCurrencySymbol()}</div>
       <div style="border-top:1px dashed #999; margin:8px 0;"></div>
       <div>${f1}</div>
       ${f2 ? `<div>${f2}</div>` : ''}
@@ -9390,8 +9463,9 @@ window.__productVisualHTML = function(p, opts){
     el.addEventListener('change', markDirty);
   });
 
-  /* ---------- Logo upload ---------- */
-  const logoPreview = document.getElementById('settings_logoPreview');
+  /* ---------- Logo upload ----------
+     محفوظ فورا (بلا انتظار "Save Changes") عبر __essenceSetStoreLogo المشتركة — كيبدل السيدبار
+     و Settings preview بيها فنفس الوقت، ماشي محلي لهاد الصفحة بوحدها. */
   const logoInput = document.getElementById('settings_logoInput');
   document.getElementById('settings_uploadLogoBtn').addEventListener('click', () => logoInput.click());
   logoInput.addEventListener('change', () => {
@@ -9399,11 +9473,9 @@ window.__productVisualHTML = function(p, opts){
     if(!file) return;
     if(!file.type.startsWith('image/')){ alert(t('settings.pleaseChooseImage')); return; }
     const reader = new FileReader();
-    reader.onload = (e) => {
-      logoPreview.innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover; border-radius:inherit;"/>`;
-      markDirty();
-    };
+    reader.onload = (e) => { if(window.__essenceSetStoreLogo) window.__essenceSetStoreLogo(e.target.result); };
     reader.readAsDataURL(file);
+    logoInput.value = '';
   });
 
   /* ---------- Theme option cards (mirrors topbar toggle) ---------- */
@@ -9429,28 +9501,28 @@ window.__productVisualHTML = function(p, opts){
     window.__lucideCreateIcons();
   });
 
-  /* ---------- Save / Discard (Store Info + Receipts + toggles) ---------- */
+  /* ---------- Save / Discard (Store Info + Receipts + toggles) ----------
+     ⚠️ الشعار (logo) ماشي جزء من هاد الـ snapshot — كيتحفظ فورا بوحدو عبر __essenceSetStoreLogo
+     (السيدبار + Settings preview فنفس الوقت)، بلا انتظار "Save Changes"، وبلا "Discard" يرجعو. */
   let savedSnapshot = captureSnapshot();
   function captureSnapshot(){
     return {
-      storeName: val('settings_storeName'), currency: val('settings_currency'), taxRate: val('settings_taxRate'),
+      storeName: val('settings_storeName'), currency: idx('settings_currency'), taxRate: val('settings_taxRate'),
       address: val('settings_address'), phone: val('settings_phone'), email: val('settings_email'),
       printer: idx('settings_printerSelect'), paper: idx('settings_paperSelect'),
-      logoHtml: logoPreview.innerHTML,
     };
   }
   function val(id){ return document.getElementById(id).value; }
   function idx(id){ return document.getElementById(id).selectedIndex; }
   function applySnapshot(snap){
     document.getElementById('settings_storeName').value = snap.storeName;
-    document.getElementById('settings_currency').value = snap.currency;
+    document.getElementById('settings_currency').selectedIndex = snap.currency;
     document.getElementById('settings_taxRate').value = snap.taxRate;
     document.getElementById('settings_address').value = snap.address;
     document.getElementById('settings_phone').value = snap.phone;
     document.getElementById('settings_email').value = snap.email;
     document.getElementById('settings_printerSelect').selectedIndex = snap.printer;
     document.getElementById('settings_paperSelect').selectedIndex = snap.paper;
-    logoPreview.innerHTML = snap.logoHtml;
   }
   // Hook عام: __essenceSyncStoreToSupabase (فآخر الملف) كينادي هاد الدالة بعد ما يجيب قيم Supabase
   // async عند تحميل الصفحة (كتوصل بعد ما الصفحة تكون خدامة من قبل)، باش الحقول تتعمر بلا ما يحتاج
@@ -9463,15 +9535,19 @@ window.__productVisualHTML = function(p, opts){
 
   function saveAllChanges(){
     savedSnapshot = captureSnapshot();
-    // نكتبو Tax Rate و Store Name و Currency و Address/Phone/Email فـ AppState.settings مباشرة —
-    // POS/Sales/Receipt كايقراو منهم بجد دابا (مصدر مشترك، كيتحفظ فـ localStorage + Supabase).
+    // نكتبو Tax Rate و Store Name و Currency فـ AppState.settings مباشرة — POS/Sales كايقراو منهم بجد دابا (مصدر مشترك، كيتحفظ فـ localStorage)
     const parsedTax = parseFloat(savedSnapshot.taxRate);
     window.AppState.settings.taxRate = isNaN(parsedTax) ? 0 : parsedTax;
     window.AppState.settings.storeName = savedSnapshot.storeName || 'Essence — Luxury Perfumes';
-    window.AppState.settings.currency = savedSnapshot.currency || 'DZD';
+    window.AppState.settings.currency = savedSnapshot.currency;
+    // ⚠️ مصلح: هاد الثلاثة كانو كيتقراو فـ captureSnapshot بصح ماكانوش كيتكتبو فـ AppState.settings —
+    // يعني ماكانوش كيتحفظو أبدا (لا localStorage، لا Supabase)، وكيرجعو ديمو عند refresh.
     window.AppState.settings.address = savedSnapshot.address || '';
     window.AppState.settings.phone = savedSnapshot.phone || '';
     window.AppState.settings.email = savedSnapshot.email || '';
+    const thVal = parseFloat(document.getElementById('settings_largeExpenseThreshold')?.value);
+    window.AppState.settings.largeExpenseThreshold = isNaN(thVal) ? 500 : thVal;
+    updateLargeExpenseLabel();
     if(window.__persistAppState) window.__persistAppState();
     if(window.__essenceSyncStoreToSupabase) window.__essenceSyncStoreToSupabase(); // PHASE 8 خطوة 4: تحديث جدول stores إذا كاينة session
     if(window.__pageRefreshers && window.__pageRefreshers.pos) window.__pageRefreshers.pos();
@@ -9586,6 +9662,47 @@ window.__productVisualHTML = function(p, opts){
 })();
 
 
+// ================= الشعار (Logo) =================
+// فارغ بالتصميم عند أول تشغيل — كل عميل كيختار شعارو الخاص (سيدبار أو Settings)، كيتحفظ فورا فـ
+// AppState.settings.logoDataUrl (نفس آلية localStorage ديال باقي التطبيق). محلي فهاد المرحلة
+// (بلا عمود logo فـ جدول stores فـ Supabase بعد)، يعني كيبقى محفوظ فهاد الجهاز/المتصفح.
+const EMPTY_LOGO_ICON = '<i data-lucide="image-plus"></i>';
+function renderLogoInto(el, dataUrl){
+  if(!el) return;
+  el.innerHTML = dataUrl
+    ? `<img src="${dataUrl}" style="width:100%; height:100%; object-fit:cover; border-radius:inherit;"/>`
+    : EMPTY_LOGO_ICON;
+}
+function applyLogoToUI(){
+  const dataUrl = (window.AppState && window.AppState.settings && window.AppState.settings.logoDataUrl) || '';
+  renderLogoInto(document.getElementById('sidebar_logoBtn'), dataUrl);
+  const settingsPreview = document.getElementById('settings_logoPreview');
+  if(settingsPreview) renderLogoInto(settingsPreview, dataUrl);
+  window.__lucideCreateIcons();
+}
+window.__essenceApplyLogoToUI = applyLogoToUI;
+function setStoreLogo(dataUrl){
+  window.AppState.settings.logoDataUrl = dataUrl || '';
+  applyLogoToUI();
+  if(window.__persistAppState) window.__persistAppState();
+}
+window.__essenceSetStoreLogo = setStoreLogo;
+function readImageFileAsLogo(file){
+  if(!file) return;
+  if(!file.type.startsWith('image/')){ alert(t('settings.pleaseChooseImage')); return; }
+  const reader = new FileReader();
+  reader.onload = (e) => setStoreLogo(e.target.result);
+  reader.readAsDataURL(file);
+}
+(function setupSidebarLogoPicker(){
+  const btn = document.getElementById('sidebar_logoBtn');
+  const input = document.getElementById('sidebar_logoInput');
+  if(!btn || !input) return;
+  btn.addEventListener('click', () => input.click());
+  input.addEventListener('change', () => { readImageFileAsLogo(input.files[0]); input.value = ''; });
+})();
+applyLogoToUI(); // أول عرض عند تحميل الصفحة (قبل حتى ما يزور المستخدم Settings)
+
 // ================= ROUTER =================
 function syncThemeIcons(){
   const isLight = document.documentElement.getAttribute('data-theme') === 'light';
@@ -9644,7 +9761,7 @@ goToPage('home');
     border:1px solid var(--border); box-shadow:0 12px 40px var(--shadow-color);`;
   document.body.appendChild(panel);
 
-  function money(n){ return window.__money(n); }
+  function money(n){ return Math.round(n||0).toLocaleString() + ' ' + window.__essenceCurrencySymbol(); }
   function closePanel(){ panel.style.display = 'none'; }
 
   function goSearch(page, searchInputId, query){
@@ -9726,7 +9843,7 @@ goToPage('home');
 // (ماشي مرة وحدة وقت تحميل الصفحة) باش تعكس آخر البيانات وتترجم صح حسب اللغة الحالية.
 (function(){
   const LOW_STOCK_THRESHOLD = 15; // نفس القيمة المستعملة فـ Home/Products
-  function money(n){ return window.__money(n); }
+  function money(n){ return Math.round(n||0).toLocaleString() + ' ' + window.__essenceCurrencySymbol(); }
 
   const clsColor = { red:'var(--error)', gold:'var(--gold)', purple:'var(--purple)' };
   const clsBg = { red:'rgba(248,113,113,0.14)', gold:'var(--gold-dim)', purple:'var(--purple-dim)' };
@@ -9844,20 +9961,6 @@ goToPage('home');
   // __essenceSyncProductsToSupabase عند كل وحدة منهم)، هادوك تعديلات إدارية حقيقية ماشي نتيجة بيع.
   let lastCapitalSnapshot = '', lastStockSnapshot = '', lastSalesSnapshot = '', lastDebtsSnapshot = '',
       lastHeldOrdersSnapshot = '', lastCouponsSnapshot = '';
-  let __storageFailureBannerShown = false;
-  window.__essenceShowStorageFailureBanner = function(err){
-    if(__storageFailureBannerShown) return; // مرة وحدة بوحدها، ماشي كل 1.5 ثانية
-    __storageFailureBannerShown = true;
-    try {
-      const el = document.createElement('div');
-      el.setAttribute('style', 'position:fixed; bottom:16px; left:50%; transform:translateX(-50%); z-index:99998; max-width:420px; background:#3a1414; border:1px solid #a33; color:#fff; padding:12px 16px; border-radius:12px; font-family:Inter,sans-serif; font-size:12.5px; line-height:1.5; box-shadow:0 8px 24px rgba(0,0,0,0.4);');
-      el.innerHTML = 'تعذر حفظ آخر تغيير محليا (مساحة التخزين فالمتصفح ممكن تكون ممتلئة — عادة بسبب صور منتجات كبار). التغييرات الجداد ما غاديش تتحفظ حتى تحل المشكل. جرب تنقص حجم صور المنتجات، أو امسح بيانات المتصفح ديال الموقع.'
-        + '<div style="margin-top:8px;"><button id="essenceStorageBannerClose" style="background:#fff2; border:none; color:#fff; padding:5px 10px; border-radius:8px; cursor:pointer; font-size:11.5px;">فهمت</button></div>';
-      document.body.appendChild(el);
-      const btn = document.getElementById('essenceStorageBannerClose');
-      if(btn) btn.addEventListener('click', () => el.remove());
-    } catch(e2){ /* ما نخليوش banner فاشل يكسر الصفحة */ }
-  };
   function persistNow(){
     try {
       const json = JSON.stringify(window.AppState);
@@ -9867,11 +9970,6 @@ goToPage('home');
       }
     } catch(e){
       console.warn('[Essence] تعذر حفظ البيانات (localStorage ممكن يكون ممتلئ أو معطل):', e);
-      // ⚠️ إصلاح: هاد الفشل كان صامت بالكامل (console.warn بوحدو) — إذا وقع فعلا (مثلا quota
-      // ديال localStorage طارت بسبب صور منتجات base64 كبار)، كان معناه لا حاجة كتتحفظ محليا
-      // بعدها (بيوعات، حذف branch، تعديل settings...)، والمستخدم ماعندوش حتى فكرة علاش التغييرات
-      // كترجع لحالها الأصلي بعد refresh. دابا كنبينو تنبيه واحد واضح (مرة وحدة، ماشي كل تيك).
-      if(window.__essenceShowStorageFailureBanner) window.__essenceShowStorageFailureBanner(e);
     }
     try {
       const capJson = JSON.stringify(window.AppState.capitalMovements || []);
@@ -10016,9 +10114,55 @@ goToPage('home');
     lock(document.getElementById('settings_saveReceiptDesignBtn'), canManageCatalog, catalogReason);
     lock(document.getElementById('settings_inviteTeamBtn'), canManageCatalog, catalogReason);
     lock(document.getElementById('settings_teamSaveBtn'), canManageCatalog, catalogReason);
+
+    applyReportsRoleGating(r);
   }
   window.__essenceApplyRoleGating = applyRoleGating;
 
+  // ===== Reports: عرض مبسط للكاشير (بلا راس المال/الربح/الهامش/أفضل المنتجات) =====
+  // طلب المستخدم: cashier يشوف غير مجموع مبيعات اليوم، مصاريف اليوم، عدد حركات اليوم، والمبلغ بعد
+  // خصم المصاريف (income - expenses بوحدها، بلا أي حساب ديال التكلفة/الربح). كلشي آخر (راس المال،
+  // Profit/Net Profit المبنيين على cost، الهامش بالفئة، أفضل المنتجات/البراندات بالإيراد، الرسم
+  // البياني) فيه أرقام حساسة (تكلفة الشراء، الهامش، سيولة المحل) خاصها تبقى مقصورة على owner/manager.
+  function applyReportsRoleGating(r){
+    const isCashier = (r === 'cashier');
+    const showEl = (id, show) => { const el = document.getElementById(id); if(el) el.style.display = show ? '' : 'none'; };
+
+    showEl('reports_profitCard', !isCashier);
+    showEl('reports_netProfitCard', !isCashier);
+    showEl('reports_todayTxnCard', isCashier);
+    showEl('reports_todayNetSimpleCard', isCashier);
+    showEl('reports_capitalRow', !isCashier);
+    showEl('reports_periodPanel', !isCashier);
+    showEl('reports_chartsRow', !isCashier);
+    showEl('reports_topMoversRow', !isCashier);
+    showEl('reports_marginRow', !isCashier);
+  }
+  window.__essenceApplyReportsRoleGating = function(){ applyReportsRoleGating(role()); };
+
+  // ===== دليل الفريق (team directory) + حل اسم الفاعل الحقيقي =====
+  // مبني على store_members_select RLS (members_select on store_members using is_store_member) —
+  // أي عضو فالمحل يقدر يشوف زملاءه (id + display_name)، بلا حاجة لـ Edge Function. كيتحمل مرة
+  // وحدة عند login/refresh (resolveStoreContext تحت)، وكيتخزن فـ Map (id → display_name) باش
+  // نحلو بيه شكون دار شنو (بيع/مصروف/حركة ستوك) حتى للسطور الجايين remote من زميل آخر.
+  let __teamDirectory = new Map();
+  async function loadTeamDirectory(storeId){
+    try {
+      const { data, error } = await window.__supabase.from('store_members').select('id, display_name, role').eq('store_id', storeId);
+      if(error || !data) return;
+      __teamDirectory = new Map(data.map(m => [m.id, m.display_name || (m.role.charAt(0).toUpperCase() + m.role.slice(1))]));
+    } catch(e){ console.warn('[Essence/Supabase] تعذر جلب دليل الفريق:', e); }
+  }
+  // memberId اختياري: بلا حجة كترجع اسم المستخدم الحالي (لكتابة محلية جديدة)؛ بحجة (uuid جاي من
+  // employee_id/who remote) كتحاول تحلها عبر الدليل — مفيدة لعرض بيوعات/مصاريف/حركات زملاء آخرين.
+  window.__essenceActorName = function(memberId){
+    const store = window.__essenceStore;
+    if(!store || !store.role) return 'You'; // بلا session (local-only/ديمو) — نفس السلوك القديم
+    const id = memberId || store.memberId;
+    if(id === store.memberId) return store.displayName || 'You';
+    if(__teamDirectory.has(id)) return __teamDirectory.get(id);
+    return 'Team'; // عضو ماكاينش بعد فالدليل (نادر: دليل مازال كيتحمل، ولا العضو تحذف)
+  };
 
   async function resolveStoreContext(){
     try {
@@ -10036,6 +10180,7 @@ goToPage('home');
       window.__essenceStore.role = data.role;
       window.__essenceStore.memberId = data.id; // خاصها لـ employee_id فـ expenses/sales/capital_movements/stock_movements
       window.__essenceStore.displayName = data.display_name || null;
+      loadTeamDirectory(data.store_id); // fire-and-forget، ماخاصهاش توقف resolveStoreContext
       updateRoleUI();
       return data.store_id;
     } catch(e){
@@ -10052,15 +10197,11 @@ goToPage('home');
       if(error || !data){ console.warn('[Essence/Supabase] تعذر جلب إعدادات المحل:', error); return; }
       window.AppState.settings.storeName = data.name || window.AppState.settings.storeName;
       window.AppState.settings.taxRate = (typeof data.tax_rate === 'number') ? data.tax_rate : window.AppState.settings.taxRate;
-      window.AppState.settings.currency = data.currency || window.AppState.settings.currency || 'DZD';
-      window.AppState.settings.address = data.address ?? window.AppState.settings.address ?? '';
-      window.AppState.settings.phone = data.phone ?? window.AppState.settings.phone ?? '';
-      window.AppState.settings.email = data.email ?? window.AppState.settings.email ?? '';
       window.AppState.settings.receiptHeaderLine1 = data.receipt_header_line1 ?? window.AppState.settings.receiptHeaderLine1;
       window.AppState.settings.receiptHeaderLine2 = data.receipt_header_line2 ?? window.AppState.settings.receiptHeaderLine2;
       window.AppState.settings.receiptFooterLine1 = data.receipt_footer_line1 ?? window.AppState.settings.receiptFooterLine1;
       window.AppState.settings.receiptFooterLine2 = data.receipt_footer_line2 ?? window.AppState.settings.receiptFooterLine2;
-      // currency: دابا حقيقية ومتزامنة (فوق) — مزال بلا رموز/تنسيق مخصص لكل عملة، بس code كسuffix.
+      // currency: عندنا غير DZD متوفرة محليا (select مقفول على قيمة وحيدة) — ماكاين حتى تزامن حالي.
       if(window.__persistAppState) window.__persistAppState();
       if(window.__essenceRefreshSettingsFields) window.__essenceRefreshSettingsFields();
       if(window.__pageRefreshers){
@@ -10075,18 +10216,19 @@ goToPage('home');
   }
 
   // Hook عام: أي نقطة حفظ فـ Settings (Save Changes / Save Design) كتنادي هاد الدالة بعد ما تكتب فـ AppState.
+  // قفل concurrency (نفس منطق debts/sales): إذا push جاري وتلقى نداء جديد (مثلا Save Changes + autosave
+  // فنفس الوقت)، ما كنديروش نداءين متوازيين للـ Supabase — كنعلمو rerun ونعاودو بعد ما يخلص الأول.
+  let __storePushBusy = false, __storePushRerunNeeded = false;
   window.__essenceSyncStoreToSupabase = async function(){
-    const storeId = window.__essenceStore.storeId || await resolveStoreContext();
-    if(!storeId) return; // بلا session/محل → local-only، بلا خطأ يبان للمستخدم
+    if(__storePushBusy){ __storePushRerunNeeded = true; return; }
+    __storePushBusy = true;
     try {
+      const storeId = window.__essenceStore.storeId || await resolveStoreContext();
+      if(!storeId) return; // بلا session/محل → local-only، بلا خطأ يبان للمستخدم
       const s = window.AppState.settings;
       const { error } = await window.__supabase.from('stores').update({
         name: s.storeName,
         tax_rate: s.taxRate,
-        currency: s.currency || 'DZD',
-        address: s.address || null,
-        phone: s.phone || null,
-        email: s.email || null,
         receipt_header_line1: s.receiptHeaderLine1,
         receipt_header_line2: s.receiptHeaderLine2,
         receipt_footer_line1: s.receiptFooterLine1,
@@ -10098,6 +10240,9 @@ goToPage('home');
     } catch(e){
       console.warn('[Essence/Supabase] __essenceSyncStoreToSupabase فشل:', e);
       if(window.__essenceOutbox) window.__essenceOutbox.markFailed('store');
+    } finally {
+      __storePushBusy = false;
+      if(__storePushRerunNeeded){ __storePushRerunNeeded = false; window.__essenceSyncStoreToSupabase(); }
     }
   };
 
@@ -10144,10 +10289,14 @@ goToPage('home');
   }
 
   // ---------- Categories + Brands (نموذج محلي: brands متداخلة جوا كل category؛ نموذج Supabase: جدول brands منفصل بـ category_id) ----------
+  // قفل concurrency (نفس منطق debts/sales) — يمنع نداءين متوازيين يديرو delete+upsert فنفس الوقت.
+  let __categoriesPushBusy = false, __categoriesPushRerunNeeded = false;
   window.__essenceSyncCategoriesToSupabase = async function(){
-    const storeId = await getStoreId();
-    if(!storeId) return;
+    if(__categoriesPushBusy){ __categoriesPushRerunNeeded = true; return; }
+    __categoriesPushBusy = true;
     try {
+      const storeId = await getStoreId();
+      if(!storeId) return;
       const categories = window.AppState.categories || [];
       let idsAssigned = false;
       categories.forEach(c => {
@@ -10196,14 +10345,21 @@ goToPage('home');
     } catch(e){
       console.warn('[Essence/Supabase] __essenceSyncCategoriesToSupabase فشل:', e);
       if(window.__essenceOutbox) window.__essenceOutbox.markFailed('categories');
+    } finally {
+      __categoriesPushBusy = false;
+      if(__categoriesPushRerunNeeded){ __categoriesPushRerunNeeded = false; window.__essenceSyncCategoriesToSupabase(); }
     }
   };
 
   // ---------- Suppliers ----------
+  // قفل concurrency (نفس منطق debts/sales).
+  let __suppliersPushBusy = false, __suppliersPushRerunNeeded = false;
   window.__essenceSyncSuppliersToSupabase = async function(){
-    const storeId = await getStoreId();
-    if(!storeId) return;
+    if(__suppliersPushBusy){ __suppliersPushRerunNeeded = true; return; }
+    __suppliersPushBusy = true;
     try {
+      const storeId = await getStoreId();
+      if(!storeId) return;
       const suppliers = window.AppState.suppliers || [];
       let idsAssigned = false;
       suppliers.forEach(s => { if(!s.id){ s.id = crypto.randomUUID(); idsAssigned = true; } });
@@ -10227,6 +10383,9 @@ goToPage('home');
     } catch(e){
       console.warn('[Essence/Supabase] __essenceSyncSuppliersToSupabase فشل:', e);
       if(window.__essenceOutbox) window.__essenceOutbox.markFailed('suppliers');
+    } finally {
+      __suppliersPushBusy = false;
+      if(__suppliersPushRerunNeeded){ __suppliersPushRerunNeeded = false; window.__essenceSyncSuppliersToSupabase(); }
     }
   };
 
@@ -10363,10 +10522,15 @@ goToPage('home');
   }
 
   // ---------- Push كامل (upsert + حذف اللي تصفا محليا) ----------
+  // قفل concurrency (نفس منطق debts/sales) — مهم بزاف هنا حيت الدالة كتدير رفع صور (async) داخل
+  // loop؛ نداءين متوازيين يقدرو يرفعو نفس الصورة مرتين أو يديرو delete المنتجات فوقاد بعضياتهم.
+  let __productsPushBusy = false, __productsPushRerunNeeded = false;
   window.__essenceSyncProductsToSupabase = async function(){
-    const storeId = await getStoreId();
-    if(!storeId) return;
+    if(__productsPushBusy){ __productsPushRerunNeeded = true; return; }
+    __productsPushBusy = true;
     try {
+      const storeId = await getStoreId();
+      if(!storeId) return;
       const products = window.AppState.products || [];
       let idsAssigned = false;
       products.forEach(p => { if(!p.id){ p.id = crypto.randomUUID(); idsAssigned = true; } });
@@ -10400,6 +10564,9 @@ goToPage('home');
     } catch(e){
       console.warn('[Essence/Supabase] __essenceSyncProductsToSupabase فشل:', e);
       if(window.__essenceOutbox) window.__essenceOutbox.markFailed('products');
+    } finally {
+      __productsPushBusy = false;
+      if(__productsPushRerunNeeded){ __productsPushRerunNeeded = false; window.__essenceSyncProductsToSupabase(); }
     }
   };
 
@@ -10477,6 +10644,14 @@ goToPage('home');
     }
   }
 
+  // ⚠️ مصدرة لـ window: setupSupabaseSalesSync كتناديها كـ safety net بعد أي push ناجح لـ sales
+  // (migration 007's trigger بدل products.stock فالسيرفر عبر sale_items INSERT — realtime المفروض
+  // يلقط هاد التحديث، بصح إذا الصفحة تعمرات (page load) قبل ما الـ sale_items ديال بيع أوفلاين
+  // توصل وتفعّل الـ trigger، pullProducts الأولية عند التحميل كتجيب stock قديم وكتبقى عالقة حتى
+  // realtime تلقط تحديث لاحق — هاد النداء المباشر بعد نجاح push ديال sales كيسد هاد الفجوة بلا
+  // اعتماد كلي على realtime).
+  window.__essencePullProducts = pullProducts;
+
   pullProducts().then(subscribeRealtime);
 })();
 
@@ -10507,10 +10682,14 @@ goToPage('home');
   }
 
   // ---------- Push كامل (upsert + حذف اللي تصفا محليا) ----------
+  // قفل concurrency (نفس منطق debts/sales).
+  let __expensesPushBusy = false, __expensesPushRerunNeeded = false;
   window.__essenceSyncExpensesToSupabase = async function(){
-    const storeId = await getStoreId();
-    if(!storeId) return;
+    if(__expensesPushBusy){ __expensesPushRerunNeeded = true; return; }
+    __expensesPushBusy = true;
     try {
+      const storeId = await getStoreId();
+      if(!storeId) return;
       const memberId = await getMemberId();
       const expenses = window.AppState.expenses || [];
       let idsAssigned = false;
@@ -10542,6 +10721,9 @@ goToPage('home');
     } catch(e){
       console.warn('[Essence/Supabase] __essenceSyncExpensesToSupabase فشل:', e);
       if(window.__essenceOutbox) window.__essenceOutbox.markFailed('expenses');
+    } finally {
+      __expensesPushBusy = false;
+      if(__expensesPushRerunNeeded){ __expensesPushRerunNeeded = false; window.__essenceSyncExpensesToSupabase(); }
     }
   };
 
@@ -10558,7 +10740,7 @@ goToPage('home');
           const d = new Date(re.created_at);
           return {
             id: re.id, cat: re.category, desc: re.description, amount: re.amount,
-            employee: 'You', // ماكاين حتى ربط بأسماء store_members محليا بعد (خطوة لاحقة إذا لزم)
+            employee: window.__essenceActorName(re.employee_id),
             dateISO: re.created_at,
             date: d.toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'}),
             day: window.__todayISO && re.created_at.slice(0,10) === window.__todayISO() ? 'Today' : '',
@@ -10630,6 +10812,9 @@ goToPage('home');
     return undefined;
   }
 
+  const __syncedCapitalHashes = new Map(); // uuid -> آخر hash تبعت بنجاح — نفس منطق sales، كيوقف
+  // loop بين push/pull (pull كيعاود يبني date/time بصيغة مغايرة شوية → autosave كيحس بفرق → push
+  // جديد بلا تغيير حقيقي → realtime يعاود يفعل pull → loop بلا نهاية بلا هاد الحماية).
   window.__essenceSyncCapitalToSupabase = async function(){
     const storeId = await getStoreId();
     if(!storeId) return;
@@ -10645,10 +10830,15 @@ goToPage('home');
         const iso = toISO(m);
         if(iso) row.created_at = iso;
         return row;
+      }).filter(row => {
+        const hash = JSON.stringify(row);
+        if(__syncedCapitalHashes.get(row.id) === hash) return false; // ماتبدلش من آخر push ناجح — نفوتو عليه
+        return true;
       });
       if(rows.length){
         const { error } = await window.__supabase.from('capital_movements').upsert(rows);
-        if(error) console.warn('[Essence/Supabase] تعذر حفظ حركات راس المال:', error);
+        if(error){ console.warn('[Essence/Supabase] تعذر حفظ حركات راس المال:', error); }
+        else { rows.forEach(row => __syncedCapitalHashes.set(row.id, JSON.stringify(row))); }
       }
       console.log('[Essence/Supabase] راس المال تزامن ✅');
       if(window.__essenceOutbox) window.__essenceOutbox.markSuccess('capital');
@@ -10737,6 +10927,7 @@ goToPage('home');
     return (p && p.id) || null;
   }
 
+  const __syncedStockMoveHashes = new Map(); // نفس منطق sales/capital — يوقف loop push↔pull بلا نهاية
   window.__essenceSyncStockMovementsToSupabase = async function(){
     const storeId = await getStoreId();
     if(!storeId) return;
@@ -10755,10 +10946,15 @@ goToPage('home');
       const rows = movements.map(m => ({
         id: m.id, store_id: storeId, product_id: resolveProductId(m.name),
         type: m.type, qty: Math.abs(m.qty || 0), reason: m.reason || null, who: memberId,
-      }));
+      })).filter(row => {
+        const hash = JSON.stringify(row);
+        if(__syncedStockMoveHashes.get(row.id) === hash) return false; // ماتبدلش من آخر push ناجح
+        return true;
+      });
       if(rows.length){
         const { error } = await window.__supabase.from('stock_movements').upsert(rows);
-        if(error) console.warn('[Essence/Supabase] تعذر حفظ حركات الستوك (RLS: owner/manager بوحدهم):', error);
+        if(error){ console.warn('[Essence/Supabase] تعذر حفظ حركات الستوك (RLS: owner/manager بوحدهم):', error); }
+        else { rows.forEach(row => __syncedStockMoveHashes.set(row.id, JSON.stringify(row))); }
       }
       console.log('[Essence/Supabase] حركات الستوك تزامنت ✅');
       if(window.__essenceOutbox) window.__essenceOutbox.markSuccess('stockMovements');
@@ -10778,8 +10974,12 @@ goToPage('home');
         const mapped = remote.map(rm => ({
           id: rm.id, name: (rm.products && rm.products.name) || '', sku: (rm.products && rm.products.sku) || '',
           type: rm.type, qty: rm.type === 'out' ? -Math.abs(rm.qty) : Math.abs(rm.qty),
-          reason: rm.reason || '', who: 'Team', time: new Date(rm.created_at).toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'}),
+          reason: rm.reason || '', who: window.__essenceActorName(rm.who), time: new Date(rm.created_at).toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'}),
           c1: '#7C5CFF',
+          // ⚠️ علامة السطور لي كتبها trigger migration 007 (reason ديالهم كيبدا بهاد النصوص) بـ
+          // _txn:true بعد الجلب — وإلا push الجاي غادي يعاود يتقطها كـ "غير معالجة" (الفلترة
+          // !m._txn) ويرسلها upsert من جديد (بلا تغيير حقيقي) → realtime يعاود يفعل pull → loop.
+          _txn: /^(Sold|Returned) — Invoice #/.test(rm.reason || ''),
         }));
         if(Array.isArray(window.AppState.stockMovements)){
           window.AppState.stockMovements.length = 0;
@@ -10903,6 +11103,9 @@ goToPage('home');
       }
       console.log('[Essence/Supabase] المبيعات تزامنت ✅');
       if(window.__essenceOutbox) window.__essenceOutbox.markSuccess('sales');
+      // safety net: migration 007's trigger بدل products.stock فالسيرفر وقت INSERT/UPDATE ديال sale_items/sales
+      // (بيع جديد أو return) — نعاود نجيب المنتجات مباشرة بدل ما نعتمدو بس على realtime.
+      if(window.__essencePullProducts) window.__essencePullProducts();
     } catch(e){
       console.warn('[Essence/Supabase] __essenceSyncSalesToSupabase فشل:', e);
       if(window.__essenceOutbox) window.__essenceOutbox.markFailed('sales');
@@ -10936,7 +11139,7 @@ goToPage('home');
             time: d.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'}), register: rs.register || 'Register 1',
             customer: existing.customer ?? null, walkIn: existing.walkIn ?? !existing.customer,
             items,
-            payment: rs.payment, employee: existing.employee || 'Team', status: rs.status,
+            payment: rs.payment, employee: existing.employee || window.__essenceActorName(rs.employee_id), status: rs.status,
             subtotal: rs.subtotal, discountPct: existing.discountPct || 0, discount: rs.discount, taxRate: existing.taxRate || 0, tax: rs.tax, total: rs.total,
             paidNow: rs.paid_now, creditAmount: rs.credit_amount, note: rs.note, coupon: rs.coupon,
           };
@@ -11392,6 +11595,22 @@ goToPage('home');
   window.addEventListener('online', flushPending);
   document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') flushPending(); });
   setInterval(flushPending, 20000);
+  window.__essenceFlushOutbox = flushPending; // معروضة برا باش زر "Sync Now" (تحت) يقدر يديرها يدويا
+
+  // ===== زر Sync Now (كل التوباراة، id$="_syncNowBtn") =====
+  // بيع أوفلاين → أونلاين محتاج أحيانا انتظار (outbox retry كل 20 ثانية، ولا online event، ولا
+  // visibilitychange) — هاد الزر كيعطي للمستخدم تحكم يدوي فوري: (1) دفع أي حاجة معلقة فالـ outbox
+  // مباشرة (بلا انتظار)، (2) reload كامل للصفحة (نفس نمط ما بعد login) باش pull جديد يخدم لكل
+  // الموديولات (products/categories/sales/capital/stock/debts/settings/held_orders/coupons) — أبسط
+  // وأضمن بكثير من نداء كل دالة pull وحدة وحدة (بعضها ماشي معروضة على window أصلا).
+  document.querySelectorAll('.sync-now-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if(btn.classList.contains('syncing')) return; // منع الضغط المتكرر أثناء التشغيل
+      btn.classList.add('syncing');
+      try { await flushPending(); } catch(e){ console.warn('[Essence/Supabase] Sync Now (push) فشل:', e); }
+      location.reload();
+    });
+  });
 
   // ===== Badge UI: مؤشر صغير عائم (بلا مس فأي HTML موجود)، كيبان غير كاين تغيير معلق ولا offline =====
   let badgeEl = null;
