@@ -9119,11 +9119,7 @@ window.__productVisualHTML = function(p, opts){
     logoHtml:'',
   };
   const factoryToggleStates = [true, true, false, true, true, false, true, true]; // t=1..8 in DOM order
-  const factoryBranches = () => ([
-    { name:'Downtown', sub:'Al Baraka Mall, 3rd Floor', icon:'store', employees:8 },
-    { name:'Marina Mall', sub:'Marina Walk, Ground Floor', icon:'building-2', employees:6 },
-    { name:'Airport Road', sub:'Terminal 2, Duty Free Zone', icon:'plane', employees:3 },
-  ]);
+  const factoryBranches = () => ([]);
   const factoryTeam = () => ([
     { name:'Rania S.', role:'owner', email:'rania@essence-perfumes.com' },
     { name:'Omar K.', role:'manager', email:'omar@essence-perfumes.com' },
@@ -9188,7 +9184,7 @@ window.__productVisualHTML = function(p, opts){
     const sub = branchSubInput.value.trim() || 'No address set';
     const employees = parseInt(branchEmployeesInput.value) || 0;
     if(editingBranchIdx === null){
-      branches.push({ name, sub, employees, icon:'building-2' });
+      branches.push({ id: crypto.randomUUID(), name, sub, employees, icon:'building-2' });
     } else {
       const b = branches[editingBranchIdx];
       b.name = name; b.sub = sub; b.employees = employees;
@@ -9962,7 +9958,7 @@ goToPage('home');
   // بالبيع/الإرجاع. Add/Edit/Restock Product تبقى كيفما كانت (نداء يدوي مباشر لـ
   // __essenceSyncProductsToSupabase عند كل وحدة منهم)، هادوك تعديلات إدارية حقيقية ماشي نتيجة بيع.
   let lastCapitalSnapshot = '', lastStockSnapshot = '', lastSalesSnapshot = '', lastDebtsSnapshot = '',
-      lastHeldOrdersSnapshot = '', lastCouponsSnapshot = '';
+      lastHeldOrdersSnapshot = '', lastCouponsSnapshot = '', lastBranchesSnapshot = '';
   function persistNow(){
     try {
       const json = JSON.stringify(window.AppState);
@@ -10003,6 +9999,11 @@ goToPage('home');
       if(couponsJson !== lastCouponsSnapshot){
         lastCouponsSnapshot = couponsJson;
         if(window.__essenceSyncCouponsToSupabase) window.__essenceSyncCouponsToSupabase();
+      }
+      const branchesJson = JSON.stringify(window.AppState.branches || []);
+      if(branchesJson !== lastBranchesSnapshot){
+        lastBranchesSnapshot = branchesJson;
+        if(window.__essenceSyncBranchesToSupabase) window.__essenceSyncBranchesToSupabase();
       }
     } catch(e){
       console.warn('[Essence/Supabase] فحص التغييرات (capital/stock/sales/debts) فشل:', e);
@@ -11489,6 +11490,112 @@ goToPage('home');
   pullCoupons().then(subscribeRealtime);
 })();
 
+// ===== SUPABASE SYNC (خطوة إضافية — تصليح): Branches ⇄ Supabase =====
+// المشكل: صفحة Settings → Branches كانت 100% محلية (localStorage بوحدو، بلا جدول Supabase أصلا) —
+// يعني الحذف/الإضافة كانت خدامة صحيح فنفس المتصفح، بصح ماكانتش تتزامن بين الأجهزة/المتصفحات: أي
+// متصفح جديد كان كيرجع يشوف البيانات التجريبية الافتراضية (factoryBranches()) لأنو localStorage
+// ديالو فارغ. نفس فلسفة Suppliers بالضبط (جدول بسيط id/store_id/name/sub/employees/icon، مقصور على
+// owner/manager فالكتابة، cashier يشوف بس — شوف migration 009).
+(function setupSupabaseBranchesSync(){
+  if(!window.__supabase) return; // Supabase client ماكاينش متاح — نكملو local-only
+
+  async function getStoreId(){
+    if(window.__essenceStore && window.__essenceStore.storeId) return window.__essenceStore.storeId;
+    if(window.__essenceResolveStoreContext) return await window.__essenceResolveStoreContext();
+    return null;
+  }
+
+  // قفل concurrency (نفس منطق debts/sales/categories/suppliers).
+  let __branchesPushBusy = false, __branchesPushRerunNeeded = false;
+  window.__essenceSyncBranchesToSupabase = async function(){
+    if(__branchesPushBusy){ __branchesPushRerunNeeded = true; return; }
+    __branchesPushBusy = true;
+    try {
+      const storeId = await getStoreId();
+      if(!storeId) return; // بلا session/محل → local-only، بلا خطأ يبان للمستخدم
+      const branches = window.AppState.branches || [];
+      let idsAssigned = false;
+      branches.forEach(b => { if(!b.id){ b.id = crypto.randomUUID(); idsAssigned = true; } });
+      if(idsAssigned && window.__persistAppState) window.__persistAppState();
+
+      const rows = branches.map(b => ({
+        id: b.id, store_id: storeId, name: b.name, sub: b.sub || '',
+        employees: b.employees || 0, icon: b.icon || 'building-2',
+      }));
+      if(rows.length){
+        const { error } = await window.__supabase.from('branches').upsert(rows);
+        if(error) console.warn('[Essence/Supabase] تعذر حفظ الفروع:', error);
+      }
+      const localIds = new Set(rows.map(r => r.id));
+      const { data: remoteBranches } = await window.__supabase.from('branches').select('id').eq('store_id', storeId);
+      const toDelete = (remoteBranches || []).map(r => r.id).filter(id => !localIds.has(id));
+      if(toDelete.length){
+        const { error } = await window.__supabase.from('branches').delete().in('id', toDelete);
+        if(error) console.warn('[Essence/Supabase] تعذر حذف الفروع المحذوفة محليا فـ Supabase:', error);
+      }
+
+      console.log('[Essence/Supabase] الفروع تزامنت ✅');
+      if(window.__essenceOutbox) window.__essenceOutbox.markSuccess('branches');
+    } catch(e){
+      console.warn('[Essence/Supabase] __essenceSyncBranchesToSupabase فشل:', e);
+      if(window.__essenceOutbox) window.__essenceOutbox.markFailed('branches');
+    } finally {
+      __branchesPushBusy = false;
+      if(__branchesPushRerunNeeded){ __branchesPushRerunNeeded = false; window.__essenceSyncBranchesToSupabase(); }
+    }
+  };
+
+  async function pullBranches(){
+    const storeId = await getStoreId();
+    if(!storeId) return;
+    try {
+      const { data: remote, error } = await window.__supabase.from('branches').select('*').eq('store_id', storeId);
+      if(error) return;
+      if(remote && remote.length){
+        // Supabase هي المصدر الحقيقي دابا — نعمرو AppState محليا بيها
+        const mapped = remote.map(r => ({
+          id: r.id, name: r.name, sub: r.sub || '', employees: r.employees || 0, icon: r.icon || 'building-2',
+        }));
+        // نبدلو المحتوى بلا ما نبدلو الـ array نفسها (object identity) — نفس التحفظ ديال categories/suppliers
+        if(Array.isArray(window.AppState.branches)){
+          window.AppState.branches.length = 0;
+          window.AppState.branches.push(...mapped);
+        } else {
+          window.AppState.branches = mapped;
+        }
+        if(window.__persistAppState) window.__persistAppState();
+        if(window.__pageRefreshers){
+          if(window.__pageRefreshers.settings) window.__pageRefreshers.settings();
+          if(window.__pageRefreshers.home) window.__pageRefreshers.home();
+        }
+        console.log('[Essence/Supabase] الفروع تزامنت من Supabase ✅', remote);
+      } else if((window.AppState.branches || []).length){
+        // Supabase فارغة، محليا كاين بيانات (بما فيها البيانات التجريبية الافتراضية) — أول ربط لهاد
+        // المحل: نرفعو المحلي فوق (بما فيه الديمو، بحال باقي الموديولات — المستخدم يقدر يمسحها من بعد)
+        await window.__essenceSyncBranchesToSupabase();
+        console.log('[Essence/Supabase] أول هجرة: الفروع المحلية اترفعت لـ Supabase ✅');
+      }
+    } catch(e){
+      // fail-safe صامت
+    }
+  }
+
+  async function subscribeRealtime(){
+    const storeId = await getStoreId();
+    if(!storeId) return;
+    try {
+      window.__supabase
+        .channel(`branches-store-${storeId}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'branches', filter: `store_id=eq.${storeId}` }, () => pullBranches())
+        .subscribe();
+    } catch(e){
+      console.warn('[Essence/Supabase] subscribeRealtime (branches) فشل:', e);
+    }
+  }
+
+  pullBranches().then(subscribeRealtime);
+})();
+
 // ===== SUPABASE SYNC (PHASE 8 — مهاجرة، خطوة 8أ): Offline Queue (IndexedDB outbox) =====
 // المشكلة: كل دوال __essenceSyncXToSupabase (خطوات 4-7) عندها try/catch ديالها الخاص — إذا fetch
 // فشل (offline/انقطاع نت)، الخطأ كيتلقط وكيتسجل فـ console.warn بوحدو، بلا throw للخارج. يعني إذا
@@ -11519,6 +11626,7 @@ goToPage('home');
     debts: '__essenceSyncDebtsToSupabase',
     heldOrders: '__essenceSyncHeldOrdersToSupabase',
     coupons: '__essenceSyncCouponsToSupabase',
+    branches: '__essenceSyncBranchesToSupabase',
   };
 
   const DB_NAME = 'essence_outbox_v1', STORE_NAME = 'pending';
