@@ -2603,67 +2603,41 @@ body.essence-authed #authGate{ display:none; }
 .img-upload-actions .upload-btn{ height:32px; padding:0 12px; font-size:11.5px; }
 .img-upload-hint{ font-size:10px; color:var(--text-faint); margin-top:2px; }
 
-/* ===== MOBILE DASHBOARD (تصميم خاص للهاتف — مراقبة/تقارير بوحدها، بلا POS/بيع) =====
-   عوض ما نحاولو نضغطو تصميم الحاسوب (.app-shell) فشاشة صغيرة، هاد الواجهة مبنية من الصفر
-   للهاتف: bottom navigation بـ 5 تبويبات (Home/Reports/Stock/Debts/Capital)، كلهم read-only،
-   كيقراو مباشرة من window.AppState (بلا حتى تعديل/بيع من هنا — القرار المتخذ من قبل). ===== */
-#mobileDash{ display:none; }
+/* ===== MOBILE (≤600px): نفس تصميم الحاسوب بالضبط (نفس الألوان/الكروت/التخطيط) — غير:
+   1) السايدبار (.sidebar) كيتحول لـ bar سفلي أفقي (بحال تطبيقات الهاتف) بدل عمود يسار
+   2) النص عموما شوية أصغر (zoom مضبوط على منطقة المحتوى)
+   جاي فالأخير فالـ <style> عمدا (آخر تعريف كيربح، نفس القاعدة المتبعة فباقي الملف) باش يقدر
+   يبدل .sidebar/.nav-item/.app-shell الأصليين بلا ما نبحثو على كل نسخة مكررة منهم فالملف. ===== */
 @media (max-width: 600px){
-  .app-shell{ display:none !important; }
-  #mobileDash{
-    display:flex !important; flex-direction:column; height:100dvh; height:100vh; background:var(--bg);
-    position:fixed; inset:0; z-index:5;
+  .app-shell{
+    display:grid !important; grid-template-columns:1fr !important; grid-template-rows:1fr auto !important;
+    height:100vh !important; padding:8px !important; gap:8px !important;
   }
+  .main-col-outer{ order:1; overflow:hidden !important; zoom:0.82; }
+
+  /* السايدبار → bar سفلي أفقي، scrollable إذا ماكفاش المكان لكل الأزرار */
+  .sidebar{
+    order:2; flex-direction:row !important; align-items:center !important;
+    width:100% !important; height:auto !important; padding:6px 8px !important;
+    border-radius: var(--radius-md) !important; overflow-x:auto; -webkit-overflow-scrolling:touch;
+  }
+  .sidebar .brand{ display:none !important; } /* لا داعي للوغو الكبير فبار ضيق سفلي */
+  .nav-list{
+    flex-direction:row !important; width:auto !important; flex:1 !important; gap:2px !important;
+    align-items:center !important;
+  }
+  .nav-item{
+    width:auto !important; min-width:46px; flex-shrink:0; padding:6px 5px 5px !important;
+  }
+  .nav-item span{ display:block !important; font-size:8px !important; } /* كانت مخبية قبل، دابا بانة بحجم صغير */
+  .nav-item.active::before{ display:none; } /* الخط الجانبي ديال active ماخدامش أفقي، نخبيوه */
+  .sidebar-footer{
+    flex-direction:row !important; width:auto !important; padding:0 0 0 8px !important;
+    border-top:none !important; border-left:1px solid var(--border-soft); margin-left:6px; gap:6px !important;
+  }
+  .sidebar-footer .role{ display:none !important; } /* بلا مكان كافي فبار سفلي ضيق */
+  #sidebar_userName{ display:none !important; }
 }
-.md-header{ padding:16px 18px 14px; border-bottom:1px solid var(--border-soft); flex-shrink:0; }
-.md-header-top{ display:flex; align-items:center; justify-content:space-between; }
-.md-brand{ font-size:15px; font-weight:700; color:var(--text); font-family:'JetBrains Mono',monospace; letter-spacing:.3px; }
-.md-sync-dot{ width:8px; height:8px; border-radius:50%; background:var(--success); box-shadow:0 0 0 3px rgba(52,211,153,0.18); flex-shrink:0; }
-.md-sync-dot.offline{ background:var(--text-faint); box-shadow:none; }
-.md-greeting{ margin-top:6px; font-size:13px; color:var(--text-dim); }
-.md-content{ flex:1; overflow-y:auto; padding:14px 16px 96px; -webkit-overflow-scrolling:touch; }
-.md-pane{ display:flex; flex-direction:column; gap:14px; }
-.md-stat-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-.md-stat-grid-1{ grid-template-columns:1fr; }
-.md-stat-card{
-  background:var(--card-glass); border:1px solid var(--border-soft); border-radius:var(--radius-md);
-  padding:13px 14px; display:flex; flex-direction:column; gap:6px;
-}
-.md-stat-label{ font-size:11px; color:var(--text-faint); }
-.md-stat-value{ font-size:16px; font-weight:700; color:var(--text); font-family:'JetBrains Mono',monospace; }
-.md-card{
-  background:var(--card-glass); border:1px solid var(--border-soft); border-radius:var(--radius-md); padding:14px;
-}
-.md-card-title{ font-size:13px; font-weight:600; color:var(--text); margin-bottom:10px; }
-.md-list{ display:flex; flex-direction:column; gap:0; }
-.md-list-row{
-  display:flex; align-items:center; justify-content:space-between; gap:10px;
-  padding:9px 0; border-bottom:1px solid var(--border-soft);
-}
-.md-list-row:last-child{ border-bottom:none; }
-.md-list-main{ display:flex; flex-direction:column; gap:2px; min-width:0; }
-.md-list-title{ font-size:12.5px; color:var(--text); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:52vw; }
-.md-list-sub{ font-size:10.5px; color:var(--text-faint); }
-.md-list-value{ font-size:12.5px; font-weight:700; font-family:'JetBrains Mono',monospace; flex-shrink:0; }
-.md-list-value.low{ color:var(--error); }
-.md-list-value.in{ color:var(--success); }
-.md-list-empty{ font-size:12px; color:var(--text-faint); text-align:center; padding:16px 0; }
-.md-search{ margin-bottom:2px; }
-.md-search input{
-  width:100%; height:40px; border-radius:11px; border:1px solid var(--border-soft); background:var(--fill-1);
-  color:var(--text); padding:0 14px; font-size:13px; font-family:inherit; box-sizing:border-box;
-}
-.md-bottom-nav{
-  position:absolute; left:0; right:0; bottom:0; display:flex; background:var(--card);
-  border-top:1px solid var(--border-soft); padding:6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
-  flex-shrink:0;
-}
-.md-nav-btn{
-  flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 2px;
-  background:none; border:none; color:var(--text-faint); font-family:inherit; font-size:9.5px; cursor:pointer;
-}
-.md-nav-btn svg{ width:19px; height:19px; }
-.md-nav-btn.active{ color:var(--purple); }
 </style>
 </head>
 <body>
@@ -4374,75 +4348,6 @@ body.essence-authed #authGate{ display:none; }
   </div>
 </div>
 
-<!-- ===== MOBILE DASHBOARD (تصميم خاص للهاتف — مراقبة/تقارير بوحدها) — شوف CSS #mobileDash فوق ===== -->
-<div id="mobileDash">
-  <header class="md-header">
-    <div class="md-header-top">
-      <div class="md-brand" id="md_storeName">Essence</div>
-      <div class="md-sync-dot" id="md_syncDot" title="Sync status"></div>
-    </div>
-    <div class="md-greeting" id="md_greeting">—</div>
-  </header>
-
-  <main class="md-content">
-    <section class="md-pane" id="md_pane_home" data-md-pane="home">
-      <div class="md-stat-grid">
-        <div class="md-stat-card"><span class="md-stat-label" data-i18n="reports.todayIncome">Today's Income</span><span class="md-stat-value" id="md_home_income">0 دج</span></div>
-        <div class="md-stat-card"><span class="md-stat-label" data-i18n="reports.todayExpenses">Today's Expenses</span><span class="md-stat-value" id="md_home_expenses">0 دج</span></div>
-        <div class="md-stat-card"><span class="md-stat-label" data-i18n="reports.todayAfterExpenses">Total After Expenses</span><span class="md-stat-value" id="md_home_net">0 دج</span></div>
-        <div class="md-stat-card"><span class="md-stat-label" data-i18n="home.outstandingDebts">Outstanding Debts</span><span class="md-stat-value" id="md_home_debts">0 دج</span></div>
-      </div>
-      <div class="md-card">
-        <div class="md-card-title" data-i18n="home.lowStockAlerts">Low Stock Alerts</div>
-        <div class="md-list" id="md_home_lowStock"></div>
-      </div>
-    </section>
-
-    <section class="md-pane" id="md_pane_reports" data-md-pane="reports" style="display:none;">
-      <div class="md-stat-grid">
-        <div class="md-stat-card"><span class="md-stat-label" data-i18n="reports.todayIncome">Today's Income</span><span class="md-stat-value" id="md_rep_income">0 دج</span></div>
-        <div class="md-stat-card"><span class="md-stat-label" data-i18n="reports.todayExpenses">Today's Expenses</span><span class="md-stat-value" id="md_rep_expenses">0 دج</span></div>
-        <div class="md-stat-card"><span class="md-stat-label" data-i18n="reports.todayMovements">Today's Movements</span><span class="md-stat-value" id="md_rep_txns">0</span></div>
-        <div class="md-stat-card"><span class="md-stat-label" data-i18n="reports.todayAfterExpenses">Total After Expenses</span><span class="md-stat-value" id="md_rep_net">0 دج</span></div>
-      </div>
-      <div class="md-card">
-        <div class="md-card-title" data-i18n="mobile.recentSales">Recent Sales</div>
-        <div class="md-list" id="md_rep_recentSales"></div>
-      </div>
-    </section>
-
-    <section class="md-pane" id="md_pane_stock" data-md-pane="stock" style="display:none;">
-      <div class="md-search"><input type="text" id="md_stock_search" data-i18n-placeholder="mobile.searchStock" placeholder="Search products…"/></div>
-      <div class="md-list" id="md_stock_list"></div>
-    </section>
-
-    <section class="md-pane" id="md_pane_debts" data-md-pane="debts" style="display:none;">
-      <div class="md-stat-grid md-stat-grid-1">
-        <div class="md-stat-card"><span class="md-stat-label" data-i18n="home.outstandingDebts">Outstanding Debts</span><span class="md-stat-value" id="md_debts_total">0 دج</span></div>
-      </div>
-      <div class="md-list" id="md_debts_list"></div>
-    </section>
-
-    <section class="md-pane" id="md_pane_capital" data-md-pane="capital" style="display:none;">
-      <div class="md-stat-grid md-stat-grid-1">
-        <div class="md-stat-card"><span class="md-stat-label" data-i18n="reports.capitalLabel">Your Capital (Cash on Hand)</span><span class="md-stat-value" id="md_capital_balance">0 دج</span></div>
-      </div>
-      <div class="md-card">
-        <div class="md-card-title" data-i18n="mobile.recentMovements">Recent Movements</div>
-        <div class="md-list" id="md_capital_list"></div>
-      </div>
-    </section>
-  </main>
-
-  <nav class="md-bottom-nav">
-    <button class="md-nav-btn active" data-md-nav="home"><i data-lucide="layout-dashboard"></i><span data-i18n="nav.home">Home</span></button>
-    <button class="md-nav-btn" data-md-nav="reports"><i data-lucide="bar-chart-3"></i><span data-i18n="nav.reports">Reports</span></button>
-    <button class="md-nav-btn" data-md-nav="stock"><i data-lucide="boxes"></i><span data-i18n="nav.stock">Stock</span></button>
-    <button class="md-nav-btn" data-md-nav="debts"><i data-lucide="hand-coins"></i><span data-i18n="nav.debts">Debts</span></button>
-    <button class="md-nav-btn" data-md-nav="capital"><i data-lucide="wallet"></i><span data-i18n="mobile.capitalTab">Capital</span></button>
-  </nav>
-</div>
-
 <script>
 // ===== SHARED STATE (AppState) =====
 // مصدر واحد للبيانات، مشترك بين كل الصفحات (Products, POS, Category, Suppliers, Stock).
@@ -4464,10 +4369,6 @@ const I18N = {
     'nav.home':'Home', 'nav.pos':'POS', 'nav.products':'Products', 'nav.suppliers':'Suppliers',
     'nav.category':'Category', 'nav.debts':'Debts', 'nav.sales':'Sales', 'nav.stock':'Stock',
     'nav.expenses':'Expenses', 'nav.reports':'Reports', 'nav.analytics':'Analytics', 'nav.settings':'Settings',
-    'mobile.capitalTab':'Capital', 'mobile.recentSales':'Recent Sales', 'mobile.recentMovements':'Recent Movements',
-    'mobile.searchStock':'Search products…', 'mobile.noLowStock':'No low-stock items right now.',
-    'mobile.noDebts':'No outstanding debts.', 'mobile.noMovements':'No movements yet.',
-    'mobile.noSales':'No sales yet today.', 'mobile.noProducts':'No products found.',
     'sidebar.role':'Store Manager',
     'sidebar.addLogo':'Add your logo',
     'role.owner':'Owner', 'role.manager':'Manager', 'role.cashier':'Cashier',
@@ -4884,10 +4785,6 @@ const I18N = {
     'nav.home':'Accueil', 'nav.pos':'Caisse', 'nav.products':'Produits', 'nav.suppliers':'Fournisseurs',
     'nav.category':'Catégorie', 'nav.debts':'Dettes', 'nav.sales':'Ventes', 'nav.stock':'Stock',
     'nav.expenses':'Dépenses', 'nav.reports':'Rapports', 'nav.analytics':'Analytique', 'nav.settings':'Paramètres',
-    'mobile.capitalTab':'Capital', 'mobile.recentSales':'Ventes récentes', 'mobile.recentMovements':'Mouvements récents',
-    'mobile.searchStock':'Rechercher des produits…', 'mobile.noLowStock':'Aucun article en stock faible.',
-    'mobile.noDebts':'Aucune dette impayée.', 'mobile.noMovements':'Aucun mouvement pour le moment.',
-    'mobile.noSales':'Aucune vente aujourd\'hui.', 'mobile.noProducts':'Aucun produit trouvé.',
     'sidebar.role':'Gérante du magasin',
     'sidebar.addLogo':'Ajouter votre logo',
     'role.owner':'Propriétaire', 'role.manager':'Responsable', 'role.cashier':'Caissier',
@@ -11693,180 +11590,6 @@ goToPage('home');
     sel.value = window.__i18n.lang;
     sel.addEventListener('change', function(){ window.__i18n.setLang(sel.value); });
   }
-})();
-</script>
-<script>
-// ===== MOBILE DASHBOARD (تصميم خاص للهاتف — مراقبة/تقارير بوحدها، بلا POS/بيع) =====
-// قرار: الهاتف مخصص لصاحب المحل باش يتابع البيانات (تقارير/ستوك/ديون/راس مال) عن بعد، ماشي
-// لدير بيع (داك دور الحاسوب/POS). هاد الواجهة مبنية من الصفر (bottom nav، 5 تبويبات)، ماشي
-// نسخة مضغوطة من .app-shell — كتبان غير عند viewport ≤600px (شوف CSS #mobileDash).
-// كل التبويبات read-only: كتقرا مباشرة من window.AppState (نفس البيانات المتزامنة مع Supabase
-// لباقي التطبيق) بلا أي دالة كتابة/تعديل من هنا.
-(function setupMobileDashboard(){
-  const root = document.getElementById('mobileDash');
-  if(!root) return;
-
-  const LOW_STOCK_THRESHOLD = 15; // نفس القيمة المستعملة فـ Home/Products/Reports
-  function money(n){ return Math.round(n||0).toLocaleString() + ' دج'; }
-  function saleTotal(s){
-    if(window.__saleFinancials) return window.__saleFinancials(s).total;
-    return (s.items||[]).reduce((x,i)=>x + i.qty*i.price, 0);
-  }
-  function todayLabel(){ return window.__todayLabel ? window.__todayLabel() : ''; }
-  function t(k){ return (window.__i18n && window.__i18n.t) ? window.__i18n.t(k) : k; }
-
-  /* ---------- Header: اسم المحل + ترحيب + نقطة حالة الاتصال ---------- */
-  function renderHeader(){
-    const storeNameEl = document.getElementById('md_storeName');
-    if(storeNameEl) storeNameEl.textContent = (window.AppState.settings && window.AppState.settings.storeName) || 'Essence';
-
-    const hour = new Date().getHours();
-    const period = hour < 12 ? 'Morning' : hour < 18 ? 'Afternoon' : 'Evening';
-    const actorName = (window.__essenceStore && window.__essenceStore.displayName) || null;
-    const greetingEl = document.getElementById('md_greeting');
-    if(greetingEl && window.__i18n){
-      greetingEl.textContent = actorName
-        ? window.__i18n.tf(`home.greeting${period}Named`, {name: actorName})
-        : t(`home.greeting${period}Generic`);
-    }
-
-    const dot = document.getElementById('md_syncDot');
-    if(dot) dot.classList.toggle('offline', !navigator.onLine);
-  }
-
-  /* ---------- Home: ملخص اليوم + تنبيهات الستوك المنخفض ---------- */
-  function renderHome(){
-    const products = window.AppState.products || [];
-    const sales = (window.AppState.sales || []).filter(s => s.status !== 'returned');
-    const expenses = window.AppState.expenses || [];
-    const debts = window.AppState.debts || [];
-    const today = todayLabel();
-
-    const todaySales = sales.filter(s => s.date === today);
-    const todayIncome = todaySales.reduce((s,sl)=>s+saleTotal(sl),0);
-    const todayExpenses = expenses.filter(e => e.date === today || e.day === today).reduce((s,e)=>s+(e.amount||0),0);
-    const totalDebt = debts.filter(d => d.debt > 0).reduce((s,d)=>s+d.debt,0);
-    const lowStock = products.filter(p => p.stock < LOW_STOCK_THRESHOLD).sort((a,b)=>a.stock-b.stock).slice(0,8);
-
-    setText('md_home_income', money(todayIncome));
-    setText('md_home_expenses', money(todayExpenses));
-    setText('md_home_net', money(todayIncome - todayExpenses));
-    setText('md_home_debts', money(totalDebt));
-
-    const listEl = document.getElementById('md_home_lowStock');
-    if(listEl){
-      listEl.innerHTML = lowStock.length ? lowStock.map(p => `
-        <div class="md-list-row">
-          <div class="md-list-main"><span class="md-list-title">${escapeHtml(p.name)}</span></div>
-          <span class="md-list-value ${p.stock<=0?'low':''}">${p.stock<=0 ? t('products.outOfStock') : p.stock}</span>
-        </div>`).join('') : `<div class="md-list-empty">${t('mobile.noLowStock')}</div>`;
-    }
-  }
-
-  /* ---------- Reports: نفس أرقام صفحة Reports (اليوم) + آخر البيوعات ---------- */
-  function renderReports(){
-    const products = window.AppState.products || [];
-    const sales = (window.AppState.sales || []).filter(s => s.status !== 'returned');
-    const expenses = window.AppState.expenses || [];
-    const today = todayLabel();
-
-    const todaySales = sales.filter(s => s.date === today);
-    const todayIncome = todaySales.reduce((s,sl)=>s+saleTotal(sl),0);
-    const todayExpensesList = expenses.filter(e => e.date === today || e.day === today);
-    const todayExpenses = todayExpensesList.reduce((s,e)=>s+(e.amount||0),0);
-    const todayTxnCount = todaySales.length + todayExpensesList.length;
-
-    setText('md_rep_income', money(todayIncome));
-    setText('md_rep_expenses', money(todayExpenses));
-    setText('md_rep_txns', String(todayTxnCount));
-    setText('md_rep_net', money(todayIncome - todayExpenses));
-
-    const recent = sales.slice().sort((a,b) => (b.dateISO||'').localeCompare(a.dateISO||'')).slice(0,10);
-    const listEl = document.getElementById('md_rep_recentSales');
-    if(listEl){
-      listEl.innerHTML = recent.length ? recent.map(s => `
-        <div class="md-list-row">
-          <div class="md-list-main"><span class="md-list-title">${escapeHtml(s.id||'')}</span><span class="md-list-sub">${escapeHtml(s.date||'')} ${escapeHtml(s.time||'')}</span></div>
-          <span class="md-list-value">${money(saleTotal(s))}</span>
-        </div>`).join('') : `<div class="md-list-empty">${t('mobile.noSales')}</div>`;
-    }
-  }
-
-  /* ---------- Stock: عرض بوحدو، بلا تعديل — بحث بسيط ---------- */
-  function renderStock(filterText){
-    const products = window.AppState.products || [];
-    const q = (filterText || '').trim().toLowerCase();
-    const filtered = q ? products.filter(p => (p.name||'').toLowerCase().includes(q)) : products;
-    const sorted = filtered.slice().sort((a,b)=>a.stock-b.stock);
-    const listEl = document.getElementById('md_stock_list');
-    if(listEl){
-      listEl.innerHTML = sorted.length ? sorted.map(p => `
-        <div class="md-list-row">
-          <div class="md-list-main"><span class="md-list-title">${escapeHtml(p.name)}</span><span class="md-list-sub">${money(p.price||0)}</span></div>
-          <span class="md-list-value ${p.stock<=0?'low':(p.stock<LOW_STOCK_THRESHOLD?'low':'in')}">${p.stock<=0 ? t('products.outOfStock') : p.stock}</span>
-        </div>`).join('') : `<div class="md-list-empty">${t('mobile.noProducts')}</div>`;
-    }
-  }
-
-  /* ---------- Debts: عرض بوحدو ---------- */
-  function renderDebts(){
-    const debts = (window.AppState.debts || []).filter(d => d.debt > 0).sort((a,b)=>b.debt-a.debt);
-    const total = debts.reduce((s,d)=>s+d.debt,0);
-    setText('md_debts_total', money(total));
-    const listEl = document.getElementById('md_debts_list');
-    if(listEl){
-      listEl.innerHTML = debts.length ? debts.map(d => `
-        <div class="md-list-row">
-          <div class="md-list-main"><span class="md-list-title">${escapeHtml(d.name)}</span><span class="md-list-sub">${escapeHtml(d.phone||'')}</span></div>
-          <span class="md-list-value low">${money(d.debt)}</span>
-        </div>`).join('') : `<div class="md-list-empty">${t('mobile.noDebts')}</div>`;
-    }
-  }
-
-  /* ---------- Capital: الرصيد + آخر الحركات ---------- */
-  function renderCapital(){
-    setText('md_capital_balance', money(window.AppState.capital || 0));
-    const movements = (window.AppState.capitalMovements || []).slice(0,10);
-    const listEl = document.getElementById('md_capital_list');
-    if(listEl){
-      listEl.innerHTML = movements.length ? movements.map(m => `
-        <div class="md-list-row">
-          <div class="md-list-main"><span class="md-list-title">${escapeHtml(m.note||m.type||'')}</span><span class="md-list-sub">${escapeHtml(m.date||'')} ${escapeHtml(m.time||'')}</span></div>
-          <span class="md-list-value ${m.amount<0?'low':'in'}">${m.amount<0?'−':'+'}${money(Math.abs(m.amount||0))}</span>
-        </div>`).join('') : `<div class="md-list-empty">${t('mobile.noMovements')}</div>`;
-    }
-  }
-
-  function setText(id, val){ const el = document.getElementById(id); if(el) el.textContent = val; }
-  function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-
-  const renderers = { home: renderHome, reports: renderReports, stock: () => renderStock(searchInput ? searchInput.value : ''), debts: renderDebts, capital: renderCapital };
-  let activeTab = 'home';
-  function renderActive(){ renderHeader(); const fn = renderers[activeTab]; if(fn) fn(); if(window.__lucideCreateIcons) window.__lucideCreateIcons(); }
-
-  /* ---------- Bottom nav: تبديل التبويبات ---------- */
-  root.querySelectorAll('.md-nav-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const key = btn.getAttribute('data-md-nav');
-      if(!key || key === activeTab) return;
-      root.querySelectorAll('.md-nav-btn').forEach(b => b.classList.toggle('active', b === btn));
-      root.querySelectorAll('.md-pane').forEach(p => { p.style.display = (p.getAttribute('data-md-pane') === key) ? 'flex' : 'none'; });
-      activeTab = key;
-      renderActive();
-    });
-  });
-
-  const searchInput = document.getElementById('md_stock_search');
-  if(searchInput) searchInput.addEventListener('input', () => renderStock(searchInput.value));
-
-  /* ---------- تحديث دوري خفيف (كل 5 ثواني) بينما الهاتف مفتوح — البيانات ديجا فـ AppState
-     (متزامنة عبر realtime/pull ديال باقي الموديولات)، هنا غير قراءة/رسم محلي بلا أي طلب شبكة ---------- */
-  setInterval(() => { if(document.visibilityState === 'visible') renderActive(); }, 5000);
-  window.addEventListener('online', renderHeader);
-  window.addEventListener('offline', renderHeader);
-  document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') renderActive(); });
-
-  renderActive();
 })();
 </script>
 </body>
