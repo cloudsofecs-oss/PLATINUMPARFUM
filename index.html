@@ -12,26 +12,8 @@
 <meta charset="UTF-8">
 <title>Essence — Perfume Store POS</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- ===== PWA (PHASE 8أ): manifest + أيقونات + service worker ===== -->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#09090B">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="icon" href="icon-192.png" sizes="192x192" type="image/png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Essence">
-<script>
-  // تسجيل service worker (sw.js) — بلا ما يوقف التطبيق لو فشل (متصفح قديم، ماكاينش https محليا...).
-  // ⚠️ خاصو يخدم من نفس المجلد فوق http(s) حقيقي (GitHub Pages أو خادم dev بـ http-server) — file://
-  // مباشرة كيمنع service workers، PWA install وSupabase Realtime (WebSocket) كيفشلو بلا هاد الشرط.
-  if('serviceWorker' in navigator){
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js').catch((e) => console.warn('[Essence/PWA] تسجيل service worker فشل:', e));
-    });
-  }
-</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <style>
 /* ===== home ===== */
@@ -87,26 +69,25 @@
   .app-shell{ position:relative; z-index:1; display:grid; grid-template-columns: 92px 1fr;
     grid-template-rows: 100vh; height:100vh; width:100vw; gap:14px; padding:14px; }
 
-  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:14px 0 10px; }
-  .sidebar .brand{ width:34px; height:34px; border-radius:10px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
-    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:16px; }
-  .sidebar .brand svg{ width:16px; height:16px; stroke:white; }
-  .nav-list{ display:flex; flex-direction:column; gap:3px; flex:1; align-items:center; width:100%; overflow-y:auto; overflow-x:hidden; scrollbar-width:none; min-height:0; }
-  .nav-list::-webkit-scrollbar{ display:none; }
-  .nav-item{ width:64px; padding:6px 0 5px; border-radius:12px; display:flex; flex-direction:column; align-items:center; gap:3px;
+  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:20px 0 16px; }
+  .sidebar .brand{ width:40px; height:40px; border-radius:12px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
+    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:28px; }
+  .sidebar .brand svg{ width:20px; height:20px; stroke:white; }
+  .nav-list{ display:flex; flex-direction:column; gap:6px; flex:1; align-items:center; width:100%;}
+  .nav-item{ width:64px; padding:9px 0 7px; border-radius:14px; display:flex; flex-direction:column; align-items:center; gap:5px;
     color:var(--text-dim); cursor:pointer; position:relative; transition: all .25s cubic-bezier(.2,.8,.2,1); }
-  .nav-item svg{ width:17px; height:17px; stroke-width:1.6; transition: transform .25s; }
-  .nav-item span{ font-size:8.5px; font-weight:500; letter-spacing:.2px; }
+  .nav-item svg{ width:19px; height:19px; stroke-width:1.6; transition: transform .25s; }
+  .nav-item span{ font-size:9.5px; font-weight:500; letter-spacing:.2px; }
   .nav-item:hover{ color:var(--text); background:var(--fill-3); transform:translateY(-1px); }
   .nav-item:hover svg{ transform:scale(1.08); }
   .nav-item.active{ color:var(--text); background: linear-gradient(180deg, rgba(124,92,255,0.22), rgba(124,92,255,0.06));
     box-shadow: inset 0 0 0 1px rgba(124,92,255,0.35), 0 4px 16px rgba(124,92,255,0.18); }
   .nav-item.active::before{ content:''; position:absolute; left:-11px; top:50%; transform:translateY(-50%);
     width:3px; height:16px; border-radius:3px; background:var(--purple); box-shadow:0 0 10px var(--purple); }
-  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:6px; width:100%; padding-top:8px; border-top:1px solid var(--border-soft); }
-  .avatar{ width:30px; height:30px; border-radius:9px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
-    display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#0c0a06; }
-  .sidebar-footer .role{ font-size:7.5px; color:var(--text-faint); text-align:center; line-height:1.2; }
+  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:10px; width:100%; padding-top:14px; border-top:1px solid var(--border-soft); }
+  .avatar{ width:36px; height:36px; border-radius:11px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
+    display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#0c0a06; }
+  .sidebar-footer .role{ font-size:8.5px; color:var(--text-faint); text-align:center; line-height:1.3; }
   .logout-btn{ color:var(--text-faint); cursor:pointer; padding:6px; border-radius:8px; transition:.2s;}
   .logout-btn:hover{ color:var(--error); background:rgba(248,113,113,0.08); }
   .logout-btn svg{ width:16px; height:16px; }
@@ -125,8 +106,6 @@
   .icon-btn:hover{ color:var(--text); background:var(--fill-2); transform:translateY(-1px); }
   .icon-btn svg{ width:17px; height:17px; stroke-width:1.7; }
   .icon-btn .dot{ position:absolute; top:8px; right:8px; width:6px; height:6px; border-radius:50%; background:var(--gold); box-shadow:0 0 6px var(--gold); }
-  @keyframes essence-sync-spin{ to{ transform:rotate(360deg); } }
-  .sync-now-btn.syncing i{ animation:essence-sync-spin .8s linear infinite; display:inline-block; }
   .btn-primary{ height:40px; padding:0 16px; border-radius:12px; border:none; cursor:pointer;
     background:linear-gradient(140deg, var(--purple), #6142E0); color:white; font-size:12.5px; font-weight:600; font-family:inherit;
     display:flex; align-items:center; gap:7px; flex-shrink:0; box-shadow:0 4px 16px rgba(124,92,255,0.35); transition:.2s; }
@@ -327,27 +306,26 @@
   .sidebar{
     border-radius: var(--radius-lg);
     display:flex; flex-direction:column; align-items:center;
-    padding:14px 0 10px;
+    padding:20px 0 16px;
   }
   .sidebar .brand{
-    width:34px; height:34px; border-radius:10px;
+    width:40px; height:40px; border-radius:12px;
     background: linear-gradient(140deg, var(--purple), #4B2FD9);
     display:flex; align-items:center; justify-content:center;
     box-shadow: 0 4px 18px rgba(124,92,255,0.45);
-    margin-bottom:16px;
+    margin-bottom:28px;
   }
-  .sidebar .brand svg{ width:16px; height:16px; stroke:white; }
+  .sidebar .brand svg{ width:20px; height:20px; stroke:white; }
 
-  .nav-list{ display:flex; flex-direction:column; gap:3px; flex:1; align-items:center; width:100%; overflow-y:auto; overflow-x:hidden; scrollbar-width:none; min-height:0; }
-  .nav-list::-webkit-scrollbar{ display:none; }
+  .nav-list{ display:flex; flex-direction:column; gap:6px; flex:1; align-items:center; width:100%;}
   .nav-item{
-    width:64px; padding:6px 0 5px; border-radius:12px;
-    display:flex; flex-direction:column; align-items:center; gap:3px;
+    width:64px; padding:9px 0 7px; border-radius:14px;
+    display:flex; flex-direction:column; align-items:center; gap:5px;
     color:var(--text-dim); cursor:pointer; position:relative;
     transition: all .25s cubic-bezier(.2,.8,.2,1);
   }
-  .nav-item svg{ width:17px; height:17px; stroke-width:1.6; transition: transform .25s; }
-  .nav-item span{ font-size:8.5px; font-weight:500; letter-spacing:.2px; }
+  .nav-item svg{ width:19px; height:19px; stroke-width:1.6; transition: transform .25s; }
+  .nav-item span{ font-size:9.5px; font-weight:500; letter-spacing:.2px; }
   .nav-item:hover{ color:var(--text); background:var(--fill-3); transform:translateY(-1px); }
   .nav-item:hover svg{ transform:scale(1.08); }
   .nav-item.active{
@@ -361,14 +339,14 @@
     box-shadow:0 0 10px var(--purple);
   }
 
-  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:6px; width:100%; padding-top:8px; border-top:1px solid var(--border-soft); }
+  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:10px; width:100%; padding-top:14px; border-top:1px solid var(--border-soft); }
   .avatar{
-    width:30px; height:30px; border-radius:9px; overflow:hidden;
+    width:36px; height:36px; border-radius:11px; overflow:hidden;
     background:linear-gradient(140deg,var(--gold),#8a6b2e);
     display:flex; align-items:center; justify-content:center;
-    font-size:11px; font-weight:700; color:#0c0a06;
+    font-size:13px; font-weight:700; color:#0c0a06;
   }
-  .sidebar-footer .role{ font-size:7.5px; color:var(--text-faint); text-align:center; line-height:1.2; }
+  .sidebar-footer .role{ font-size:8.5px; color:var(--text-faint); text-align:center; line-height:1.3; }
   .logout-btn{ color:var(--text-faint); cursor:pointer; padding:6px; border-radius:8px; transition:.2s;}
   .logout-btn:hover{ color:var(--error); background:rgba(248,113,113,0.08); }
   .logout-btn svg{ width:16px; height:16px; }
@@ -724,26 +702,25 @@
     grid-template-rows: 100vh; height:100vh; width:100vw; gap:14px; padding:14px; }
 
   /* Sidebar (identical to POS screen) */
-  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:14px 0 10px; }
-  .sidebar .brand{ width:34px; height:34px; border-radius:10px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
-    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:16px; }
-  .sidebar .brand svg{ width:16px; height:16px; stroke:white; }
-  .nav-list{ display:flex; flex-direction:column; gap:3px; flex:1; align-items:center; width:100%; overflow-y:auto; overflow-x:hidden; scrollbar-width:none; min-height:0; }
-  .nav-list::-webkit-scrollbar{ display:none; }
-  .nav-item{ width:64px; padding:6px 0 5px; border-radius:12px; display:flex; flex-direction:column; align-items:center; gap:3px;
+  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:20px 0 16px; }
+  .sidebar .brand{ width:40px; height:40px; border-radius:12px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
+    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:28px; }
+  .sidebar .brand svg{ width:20px; height:20px; stroke:white; }
+  .nav-list{ display:flex; flex-direction:column; gap:6px; flex:1; align-items:center; width:100%;}
+  .nav-item{ width:64px; padding:9px 0 7px; border-radius:14px; display:flex; flex-direction:column; align-items:center; gap:5px;
     color:var(--text-dim); cursor:pointer; position:relative; transition: all .25s cubic-bezier(.2,.8,.2,1); }
-  .nav-item svg{ width:17px; height:17px; stroke-width:1.6; transition: transform .25s; }
-  .nav-item span{ font-size:8.5px; font-weight:500; letter-spacing:.2px; }
+  .nav-item svg{ width:19px; height:19px; stroke-width:1.6; transition: transform .25s; }
+  .nav-item span{ font-size:9.5px; font-weight:500; letter-spacing:.2px; }
   .nav-item:hover{ color:var(--text); background:var(--fill-3); transform:translateY(-1px); }
   .nav-item:hover svg{ transform:scale(1.08); }
   .nav-item.active{ color:var(--text); background: linear-gradient(180deg, rgba(124,92,255,0.22), rgba(124,92,255,0.06));
     box-shadow: inset 0 0 0 1px rgba(124,92,255,0.35), 0 4px 16px rgba(124,92,255,0.18); }
   .nav-item.active::before{ content:''; position:absolute; left:-11px; top:50%; transform:translateY(-50%);
     width:3px; height:16px; border-radius:3px; background:var(--purple); box-shadow:0 0 10px var(--purple); }
-  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:6px; width:100%; padding-top:8px; border-top:1px solid var(--border-soft); }
-  .avatar{ width:30px; height:30px; border-radius:9px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
-    display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#0c0a06; }
-  .sidebar-footer .role{ font-size:7.5px; color:var(--text-faint); text-align:center; line-height:1.2; }
+  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:10px; width:100%; padding-top:14px; border-top:1px solid var(--border-soft); }
+  .avatar{ width:36px; height:36px; border-radius:11px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
+    display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#0c0a06; }
+  .sidebar-footer .role{ font-size:8.5px; color:var(--text-faint); text-align:center; line-height:1.3; }
   .logout-btn{ color:var(--text-faint); cursor:pointer; padding:6px; border-radius:8px; transition:.2s;}
   .logout-btn:hover{ color:var(--error); background:rgba(248,113,113,0.08); }
   .logout-btn svg{ width:16px; height:16px; }
@@ -975,26 +952,25 @@
     grid-template-rows: 100vh; height:100vh; width:100vw; gap:14px; padding:14px; }
 
   /* Sidebar */
-  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:14px 0 10px; }
-  .sidebar .brand{ width:34px; height:34px; border-radius:10px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
-    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:16px; }
-  .sidebar .brand svg{ width:16px; height:16px; stroke:white; }
-  .nav-list{ display:flex; flex-direction:column; gap:3px; flex:1; align-items:center; width:100%; overflow-y:auto; overflow-x:hidden; scrollbar-width:none; min-height:0; }
-  .nav-list::-webkit-scrollbar{ display:none; }
-  .nav-item{ width:64px; padding:6px 0 5px; border-radius:12px; display:flex; flex-direction:column; align-items:center; gap:3px;
+  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:20px 0 16px; }
+  .sidebar .brand{ width:40px; height:40px; border-radius:12px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
+    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:28px; }
+  .sidebar .brand svg{ width:20px; height:20px; stroke:white; }
+  .nav-list{ display:flex; flex-direction:column; gap:6px; flex:1; align-items:center; width:100%;}
+  .nav-item{ width:64px; padding:9px 0 7px; border-radius:14px; display:flex; flex-direction:column; align-items:center; gap:5px;
     color:var(--text-dim); cursor:pointer; position:relative; transition: all .25s cubic-bezier(.2,.8,.2,1); }
-  .nav-item svg{ width:17px; height:17px; stroke-width:1.6; transition: transform .25s; }
-  .nav-item span{ font-size:8.5px; font-weight:500; letter-spacing:.2px; }
+  .nav-item svg{ width:19px; height:19px; stroke-width:1.6; transition: transform .25s; }
+  .nav-item span{ font-size:9.5px; font-weight:500; letter-spacing:.2px; }
   .nav-item:hover{ color:var(--text); background:var(--fill-3); transform:translateY(-1px); }
   .nav-item:hover svg{ transform:scale(1.08); }
   .nav-item.active{ color:var(--text); background: linear-gradient(180deg, rgba(124,92,255,0.22), rgba(124,92,255,0.06));
     box-shadow: inset 0 0 0 1px rgba(124,92,255,0.35), 0 4px 16px rgba(124,92,255,0.18); }
   .nav-item.active::before{ content:''; position:absolute; left:-11px; top:50%; transform:translateY(-50%);
     width:3px; height:16px; border-radius:3px; background:var(--purple); box-shadow:0 0 10px var(--purple); }
-  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:6px; width:100%; padding-top:8px; border-top:1px solid var(--border-soft); }
-  .avatar{ width:30px; height:30px; border-radius:9px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
-    display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#0c0a06; }
-  .sidebar-footer .role{ font-size:7.5px; color:var(--text-faint); text-align:center; line-height:1.2; }
+  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:10px; width:100%; padding-top:14px; border-top:1px solid var(--border-soft); }
+  .avatar{ width:36px; height:36px; border-radius:11px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
+    display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#0c0a06; }
+  .sidebar-footer .role{ font-size:8.5px; color:var(--text-faint); text-align:center; line-height:1.3; }
   .logout-btn{ color:var(--text-faint); cursor:pointer; padding:6px; border-radius:8px; transition:.2s;}
   .logout-btn:hover{ color:var(--error); background:rgba(248,113,113,0.08); }
   .logout-btn svg{ width:16px; height:16px; }
@@ -1117,26 +1093,25 @@
   .app-shell{ position:relative; z-index:1; display:grid; grid-template-columns: 92px 1fr;
     grid-template-rows: 100vh; height:100vh; width:100vw; gap:14px; padding:14px; }
 
-  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:14px 0 10px; }
-  .sidebar .brand{ width:34px; height:34px; border-radius:10px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
-    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:16px; }
-  .sidebar .brand svg{ width:16px; height:16px; stroke:white; }
-  .nav-list{ display:flex; flex-direction:column; gap:3px; flex:1; align-items:center; width:100%; overflow-y:auto; overflow-x:hidden; scrollbar-width:none; min-height:0; }
-  .nav-list::-webkit-scrollbar{ display:none; }
-  .nav-item{ width:64px; padding:6px 0 5px; border-radius:12px; display:flex; flex-direction:column; align-items:center; gap:3px;
+  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:20px 0 16px; }
+  .sidebar .brand{ width:40px; height:40px; border-radius:12px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
+    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:28px; }
+  .sidebar .brand svg{ width:20px; height:20px; stroke:white; }
+  .nav-list{ display:flex; flex-direction:column; gap:6px; flex:1; align-items:center; width:100%;}
+  .nav-item{ width:64px; padding:9px 0 7px; border-radius:14px; display:flex; flex-direction:column; align-items:center; gap:5px;
     color:var(--text-dim); cursor:pointer; position:relative; transition: all .25s cubic-bezier(.2,.8,.2,1); }
-  .nav-item svg{ width:17px; height:17px; stroke-width:1.6; transition: transform .25s; }
-  .nav-item span{ font-size:8.5px; font-weight:500; letter-spacing:.2px; }
+  .nav-item svg{ width:19px; height:19px; stroke-width:1.6; transition: transform .25s; }
+  .nav-item span{ font-size:9.5px; font-weight:500; letter-spacing:.2px; }
   .nav-item:hover{ color:var(--text); background:var(--fill-3); transform:translateY(-1px); }
   .nav-item:hover svg{ transform:scale(1.08); }
   .nav-item.active{ color:var(--text); background: linear-gradient(180deg, rgba(124,92,255,0.22), rgba(124,92,255,0.06));
     box-shadow: inset 0 0 0 1px rgba(124,92,255,0.35), 0 4px 16px rgba(124,92,255,0.18); }
   .nav-item.active::before{ content:''; position:absolute; left:-11px; top:50%; transform:translateY(-50%);
     width:3px; height:16px; border-radius:3px; background:var(--purple); box-shadow:0 0 10px var(--purple); }
-  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:6px; width:100%; padding-top:8px; border-top:1px solid var(--border-soft); }
-  .avatar{ width:30px; height:30px; border-radius:9px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
-    display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#0c0a06; }
-  .sidebar-footer .role{ font-size:7.5px; color:var(--text-faint); text-align:center; line-height:1.2; }
+  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:10px; width:100%; padding-top:14px; border-top:1px solid var(--border-soft); }
+  .avatar{ width:36px; height:36px; border-radius:11px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
+    display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#0c0a06; }
+  .sidebar-footer .role{ font-size:8.5px; color:var(--text-faint); text-align:center; line-height:1.3; }
   .logout-btn{ color:var(--text-faint); cursor:pointer; padding:6px; border-radius:8px; transition:.2s;}
   .logout-btn:hover{ color:var(--error); background:rgba(248,113,113,0.08); }
   .logout-btn svg{ width:16px; height:16px; }
@@ -1312,26 +1287,25 @@
   .app-shell{ position:relative; z-index:1; display:grid; grid-template-columns: 92px 1fr;
     grid-template-rows: 100vh; height:100vh; width:100vw; gap:14px; padding:14px; }
 
-  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:14px 0 10px; }
-  .sidebar .brand{ width:34px; height:34px; border-radius:10px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
-    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:16px; }
-  .sidebar .brand svg{ width:16px; height:16px; stroke:white; }
-  .nav-list{ display:flex; flex-direction:column; gap:3px; flex:1; align-items:center; width:100%; overflow-y:auto; overflow-x:hidden; scrollbar-width:none; min-height:0; }
-  .nav-list::-webkit-scrollbar{ display:none; }
-  .nav-item{ width:64px; padding:6px 0 5px; border-radius:12px; display:flex; flex-direction:column; align-items:center; gap:3px;
+  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:20px 0 16px; }
+  .sidebar .brand{ width:40px; height:40px; border-radius:12px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
+    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:28px; }
+  .sidebar .brand svg{ width:20px; height:20px; stroke:white; }
+  .nav-list{ display:flex; flex-direction:column; gap:6px; flex:1; align-items:center; width:100%;}
+  .nav-item{ width:64px; padding:9px 0 7px; border-radius:14px; display:flex; flex-direction:column; align-items:center; gap:5px;
     color:var(--text-dim); cursor:pointer; position:relative; transition: all .25s cubic-bezier(.2,.8,.2,1); }
-  .nav-item svg{ width:17px; height:17px; stroke-width:1.6; transition: transform .25s; }
-  .nav-item span{ font-size:8.5px; font-weight:500; letter-spacing:.2px; }
+  .nav-item svg{ width:19px; height:19px; stroke-width:1.6; transition: transform .25s; }
+  .nav-item span{ font-size:9.5px; font-weight:500; letter-spacing:.2px; }
   .nav-item:hover{ color:var(--text); background:var(--fill-3); transform:translateY(-1px); }
   .nav-item:hover svg{ transform:scale(1.08); }
   .nav-item.active{ color:var(--text); background: linear-gradient(180deg, rgba(124,92,255,0.22), rgba(124,92,255,0.06));
     box-shadow: inset 0 0 0 1px rgba(124,92,255,0.35), 0 4px 16px rgba(124,92,255,0.18); }
   .nav-item.active::before{ content:''; position:absolute; left:-11px; top:50%; transform:translateY(-50%);
     width:3px; height:16px; border-radius:3px; background:var(--purple); box-shadow:0 0 10px var(--purple); }
-  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:6px; width:100%; padding-top:8px; border-top:1px solid var(--border-soft); }
-  .avatar{ width:30px; height:30px; border-radius:9px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
-    display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#0c0a06; }
-  .sidebar-footer .role{ font-size:7.5px; color:var(--text-faint); text-align:center; line-height:1.2; }
+  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:10px; width:100%; padding-top:14px; border-top:1px solid var(--border-soft); }
+  .avatar{ width:36px; height:36px; border-radius:11px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
+    display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#0c0a06; }
+  .sidebar-footer .role{ font-size:8.5px; color:var(--text-faint); text-align:center; line-height:1.3; }
   .logout-btn{ color:var(--text-faint); cursor:pointer; padding:6px; border-radius:8px; transition:.2s;}
   .logout-btn:hover{ color:var(--error); background:rgba(248,113,113,0.08); }
   .logout-btn svg{ width:16px; height:16px; }
@@ -1507,26 +1481,25 @@
     grid-template-rows: 100vh; height:100vh; width:100vw; gap:14px; padding:14px; }
 
   /* Sidebar */
-  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:14px 0 10px; }
-  .sidebar .brand{ width:34px; height:34px; border-radius:10px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
-    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:16px; }
-  .sidebar .brand svg{ width:16px; height:16px; stroke:white; }
-  .nav-list{ display:flex; flex-direction:column; gap:3px; flex:1; align-items:center; width:100%; overflow-y:auto; overflow-x:hidden; scrollbar-width:none; min-height:0; }
-  .nav-list::-webkit-scrollbar{ display:none; }
-  .nav-item{ width:64px; padding:6px 0 5px; border-radius:12px; display:flex; flex-direction:column; align-items:center; gap:3px;
+  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:20px 0 16px; }
+  .sidebar .brand{ width:40px; height:40px; border-radius:12px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
+    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:28px; }
+  .sidebar .brand svg{ width:20px; height:20px; stroke:white; }
+  .nav-list{ display:flex; flex-direction:column; gap:6px; flex:1; align-items:center; width:100%;}
+  .nav-item{ width:64px; padding:9px 0 7px; border-radius:14px; display:flex; flex-direction:column; align-items:center; gap:5px;
     color:var(--text-dim); cursor:pointer; position:relative; transition: all .25s cubic-bezier(.2,.8,.2,1); }
-  .nav-item svg{ width:17px; height:17px; stroke-width:1.6; transition: transform .25s; }
-  .nav-item span{ font-size:8.5px; font-weight:500; letter-spacing:.2px; }
+  .nav-item svg{ width:19px; height:19px; stroke-width:1.6; transition: transform .25s; }
+  .nav-item span{ font-size:9.5px; font-weight:500; letter-spacing:.2px; }
   .nav-item:hover{ color:var(--text); background:var(--fill-3); transform:translateY(-1px); }
   .nav-item:hover svg{ transform:scale(1.08); }
   .nav-item.active{ color:var(--text); background: linear-gradient(180deg, rgba(124,92,255,0.22), rgba(124,92,255,0.06));
     box-shadow: inset 0 0 0 1px rgba(124,92,255,0.35), 0 4px 16px rgba(124,92,255,0.18); }
   .nav-item.active::before{ content:''; position:absolute; left:-11px; top:50%; transform:translateY(-50%);
     width:3px; height:16px; border-radius:3px; background:var(--purple); box-shadow:0 0 10px var(--purple); }
-  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:6px; width:100%; padding-top:8px; border-top:1px solid var(--border-soft); }
-  .avatar{ width:30px; height:30px; border-radius:9px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
-    display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#0c0a06; }
-  .sidebar-footer .role{ font-size:7.5px; color:var(--text-faint); text-align:center; line-height:1.2; }
+  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:10px; width:100%; padding-top:14px; border-top:1px solid var(--border-soft); }
+  .avatar{ width:36px; height:36px; border-radius:11px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
+    display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#0c0a06; }
+  .sidebar-footer .role{ font-size:8.5px; color:var(--text-faint); text-align:center; line-height:1.3; }
   .logout-btn{ color:var(--text-faint); cursor:pointer; padding:6px; border-radius:8px; transition:.2s;}
   .logout-btn:hover{ color:var(--error); background:rgba(248,113,113,0.08); }
   .logout-btn svg{ width:16px; height:16px; }
@@ -1758,26 +1731,25 @@
   .app-shell{ position:relative; z-index:1; display:grid; grid-template-columns: 92px 1fr;
     grid-template-rows: 100vh; height:100vh; width:100vw; gap:14px; padding:14px; }
 
-  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:14px 0 10px; }
-  .sidebar .brand{ width:34px; height:34px; border-radius:10px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
-    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:16px; }
-  .sidebar .brand svg{ width:16px; height:16px; stroke:white; }
-  .nav-list{ display:flex; flex-direction:column; gap:3px; flex:1; align-items:center; width:100%; overflow-y:auto; overflow-x:hidden; scrollbar-width:none; min-height:0; }
-  .nav-list::-webkit-scrollbar{ display:none; }
-  .nav-item{ width:64px; padding:6px 0 5px; border-radius:12px; display:flex; flex-direction:column; align-items:center; gap:3px;
+  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:20px 0 16px; }
+  .sidebar .brand{ width:40px; height:40px; border-radius:12px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
+    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:28px; }
+  .sidebar .brand svg{ width:20px; height:20px; stroke:white; }
+  .nav-list{ display:flex; flex-direction:column; gap:6px; flex:1; align-items:center; width:100%;}
+  .nav-item{ width:64px; padding:9px 0 7px; border-radius:14px; display:flex; flex-direction:column; align-items:center; gap:5px;
     color:var(--text-dim); cursor:pointer; position:relative; transition: all .25s cubic-bezier(.2,.8,.2,1); }
-  .nav-item svg{ width:17px; height:17px; stroke-width:1.6; transition: transform .25s; }
-  .nav-item span{ font-size:8.5px; font-weight:500; letter-spacing:.2px; }
+  .nav-item svg{ width:19px; height:19px; stroke-width:1.6; transition: transform .25s; }
+  .nav-item span{ font-size:9.5px; font-weight:500; letter-spacing:.2px; }
   .nav-item:hover{ color:var(--text); background:var(--fill-3); transform:translateY(-1px); }
   .nav-item:hover svg{ transform:scale(1.08); }
   .nav-item.active{ color:var(--text); background: linear-gradient(180deg, rgba(124,92,255,0.22), rgba(124,92,255,0.06));
     box-shadow: inset 0 0 0 1px rgba(124,92,255,0.35), 0 4px 16px rgba(124,92,255,0.18); }
   .nav-item.active::before{ content:''; position:absolute; left:-11px; top:50%; transform:translateY(-50%);
     width:3px; height:16px; border-radius:3px; background:var(--purple); box-shadow:0 0 10px var(--purple); }
-  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:6px; width:100%; padding-top:8px; border-top:1px solid var(--border-soft); }
-  .avatar{ width:30px; height:30px; border-radius:9px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
-    display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#0c0a06; }
-  .sidebar-footer .role{ font-size:7.5px; color:var(--text-faint); text-align:center; line-height:1.2; }
+  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:10px; width:100%; padding-top:14px; border-top:1px solid var(--border-soft); }
+  .avatar{ width:36px; height:36px; border-radius:11px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
+    display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#0c0a06; }
+  .sidebar-footer .role{ font-size:8.5px; color:var(--text-faint); text-align:center; line-height:1.3; }
   .logout-btn{ color:var(--text-faint); cursor:pointer; padding:6px; border-radius:8px; transition:.2s;}
   .logout-btn:hover{ color:var(--error); background:rgba(248,113,113,0.08); }
   .logout-btn svg{ width:16px; height:16px; }
@@ -1960,26 +1932,25 @@
   .app-shell{ position:relative; z-index:1; display:grid; grid-template-columns: 92px 1fr;
     grid-template-rows: 100vh; height:100vh; width:100vw; gap:14px; padding:14px; }
 
-  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:14px 0 10px; }
-  .sidebar .brand{ width:34px; height:34px; border-radius:10px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
-    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:16px; }
-  .sidebar .brand svg{ width:16px; height:16px; stroke:white; }
-  .nav-list{ display:flex; flex-direction:column; gap:3px; flex:1; align-items:center; width:100%; overflow-y:auto; overflow-x:hidden; scrollbar-width:none; min-height:0; }
-  .nav-list::-webkit-scrollbar{ display:none; }
-  .nav-item{ width:64px; padding:6px 0 5px; border-radius:12px; display:flex; flex-direction:column; align-items:center; gap:3px;
+  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:20px 0 16px; }
+  .sidebar .brand{ width:40px; height:40px; border-radius:12px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
+    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:28px; }
+  .sidebar .brand svg{ width:20px; height:20px; stroke:white; }
+  .nav-list{ display:flex; flex-direction:column; gap:6px; flex:1; align-items:center; width:100%;}
+  .nav-item{ width:64px; padding:9px 0 7px; border-radius:14px; display:flex; flex-direction:column; align-items:center; gap:5px;
     color:var(--text-dim); cursor:pointer; position:relative; transition: all .25s cubic-bezier(.2,.8,.2,1); }
-  .nav-item svg{ width:17px; height:17px; stroke-width:1.6; transition: transform .25s; }
-  .nav-item span{ font-size:8.5px; font-weight:500; letter-spacing:.2px; }
+  .nav-item svg{ width:19px; height:19px; stroke-width:1.6; transition: transform .25s; }
+  .nav-item span{ font-size:9.5px; font-weight:500; letter-spacing:.2px; }
   .nav-item:hover{ color:var(--text); background:var(--fill-3); transform:translateY(-1px); }
   .nav-item:hover svg{ transform:scale(1.08); }
   .nav-item.active{ color:var(--text); background: linear-gradient(180deg, rgba(124,92,255,0.22), rgba(124,92,255,0.06));
     box-shadow: inset 0 0 0 1px rgba(124,92,255,0.35), 0 4px 16px rgba(124,92,255,0.18); }
   .nav-item.active::before{ content:''; position:absolute; left:-11px; top:50%; transform:translateY(-50%);
     width:3px; height:16px; border-radius:3px; background:var(--purple); box-shadow:0 0 10px var(--purple); }
-  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:6px; width:100%; padding-top:8px; border-top:1px solid var(--border-soft); }
-  .avatar{ width:30px; height:30px; border-radius:9px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
-    display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#0c0a06; }
-  .sidebar-footer .role{ font-size:7.5px; color:var(--text-faint); text-align:center; line-height:1.2; }
+  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:10px; width:100%; padding-top:14px; border-top:1px solid var(--border-soft); }
+  .avatar{ width:36px; height:36px; border-radius:11px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
+    display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#0c0a06; }
+  .sidebar-footer .role{ font-size:8.5px; color:var(--text-faint); text-align:center; line-height:1.3; }
   .logout-btn{ color:var(--text-faint); cursor:pointer; padding:6px; border-radius:8px; transition:.2s;}
   .logout-btn:hover{ color:var(--error); background:rgba(248,113,113,0.08); }
   .logout-btn svg{ width:16px; height:16px; }
@@ -2128,26 +2099,25 @@
   .app-shell{ position:relative; z-index:1; display:grid; grid-template-columns: 92px 1fr;
     grid-template-rows: 100vh; height:100vh; width:100vw; gap:14px; padding:14px; }
 
-  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:14px 0 10px; }
-  .sidebar .brand{ width:34px; height:34px; border-radius:10px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
-    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:16px; }
-  .sidebar .brand svg{ width:16px; height:16px; stroke:white; }
-  .nav-list{ display:flex; flex-direction:column; gap:3px; flex:1; align-items:center; width:100%; overflow-y:auto; overflow-x:hidden; scrollbar-width:none; min-height:0; }
-  .nav-list::-webkit-scrollbar{ display:none; }
-  .nav-item{ width:64px; padding:6px 0 5px; border-radius:12px; display:flex; flex-direction:column; align-items:center; gap:3px;
+  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:20px 0 16px; }
+  .sidebar .brand{ width:40px; height:40px; border-radius:12px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
+    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:28px; }
+  .sidebar .brand svg{ width:20px; height:20px; stroke:white; }
+  .nav-list{ display:flex; flex-direction:column; gap:6px; flex:1; align-items:center; width:100%;}
+  .nav-item{ width:64px; padding:9px 0 7px; border-radius:14px; display:flex; flex-direction:column; align-items:center; gap:5px;
     color:var(--text-dim); cursor:pointer; position:relative; transition: all .25s cubic-bezier(.2,.8,.2,1); }
-  .nav-item svg{ width:17px; height:17px; stroke-width:1.6; transition: transform .25s; }
-  .nav-item span{ font-size:8.5px; font-weight:500; letter-spacing:.2px; }
+  .nav-item svg{ width:19px; height:19px; stroke-width:1.6; transition: transform .25s; }
+  .nav-item span{ font-size:9.5px; font-weight:500; letter-spacing:.2px; }
   .nav-item:hover{ color:var(--text); background:var(--fill-3); transform:translateY(-1px); }
   .nav-item:hover svg{ transform:scale(1.08); }
   .nav-item.active{ color:var(--text); background: linear-gradient(180deg, rgba(124,92,255,0.22), rgba(124,92,255,0.06));
     box-shadow: inset 0 0 0 1px rgba(124,92,255,0.35), 0 4px 16px rgba(124,92,255,0.18); }
   .nav-item.active::before{ content:''; position:absolute; left:-11px; top:50%; transform:translateY(-50%);
     width:3px; height:16px; border-radius:3px; background:var(--purple); box-shadow:0 0 10px var(--purple); }
-  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:6px; width:100%; padding-top:8px; border-top:1px solid var(--border-soft); }
-  .avatar{ width:30px; height:30px; border-radius:9px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
-    display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#0c0a06; }
-  .sidebar-footer .role{ font-size:7.5px; color:var(--text-faint); text-align:center; line-height:1.2; }
+  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:10px; width:100%; padding-top:14px; border-top:1px solid var(--border-soft); }
+  .avatar{ width:36px; height:36px; border-radius:11px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
+    display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#0c0a06; }
+  .sidebar-footer .role{ font-size:8.5px; color:var(--text-faint); text-align:center; line-height:1.3; }
   .logout-btn{ color:var(--text-faint); cursor:pointer; padding:6px; border-radius:8px; transition:.2s;}
   .logout-btn:hover{ color:var(--error); background:rgba(248,113,113,0.08); }
   .logout-btn svg{ width:16px; height:16px; }
@@ -2305,26 +2275,25 @@
   .app-shell{ position:relative; z-index:1; display:grid; grid-template-columns: 92px 1fr;
     grid-template-rows: 100vh; height:100vh; width:100vw; gap:14px; padding:14px; }
 
-  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:14px 0 10px; }
-  .sidebar .brand{ width:34px; height:34px; border-radius:10px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
-    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:16px; }
-  .sidebar .brand svg{ width:16px; height:16px; stroke:white; }
-  .nav-list{ display:flex; flex-direction:column; gap:3px; flex:1; align-items:center; width:100%; overflow-y:auto; overflow-x:hidden; scrollbar-width:none; min-height:0; }
-  .nav-list::-webkit-scrollbar{ display:none; }
-  .nav-item{ width:64px; padding:6px 0 5px; border-radius:12px; display:flex; flex-direction:column; align-items:center; gap:3px;
+  .sidebar{ border-radius: var(--radius-lg); display:flex; flex-direction:column; align-items:center; padding:20px 0 16px; }
+  .sidebar .brand{ width:40px; height:40px; border-radius:12px; background: linear-gradient(140deg, var(--purple), #4B2FD9);
+    display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 18px rgba(124,92,255,0.45); margin-bottom:28px; }
+  .sidebar .brand svg{ width:20px; height:20px; stroke:white; }
+  .nav-list{ display:flex; flex-direction:column; gap:6px; flex:1; align-items:center; width:100%;}
+  .nav-item{ width:64px; padding:9px 0 7px; border-radius:14px; display:flex; flex-direction:column; align-items:center; gap:5px;
     color:var(--text-dim); cursor:pointer; position:relative; transition: all .25s cubic-bezier(.2,.8,.2,1); }
-  .nav-item svg{ width:17px; height:17px; stroke-width:1.6; transition: transform .25s; }
-  .nav-item span{ font-size:8.5px; font-weight:500; letter-spacing:.2px; }
+  .nav-item svg{ width:19px; height:19px; stroke-width:1.6; transition: transform .25s; }
+  .nav-item span{ font-size:9.5px; font-weight:500; letter-spacing:.2px; }
   .nav-item:hover{ color:var(--text); background:var(--fill-3); transform:translateY(-1px); }
   .nav-item:hover svg{ transform:scale(1.08); }
   .nav-item.active{ color:var(--text); background: linear-gradient(180deg, rgba(124,92,255,0.22), rgba(124,92,255,0.06));
     box-shadow: inset 0 0 0 1px rgba(124,92,255,0.35), 0 4px 16px rgba(124,92,255,0.18); }
   .nav-item.active::before{ content:''; position:absolute; left:-11px; top:50%; transform:translateY(-50%);
     width:3px; height:16px; border-radius:3px; background:var(--purple); box-shadow:0 0 10px var(--purple); }
-  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:6px; width:100%; padding-top:8px; border-top:1px solid var(--border-soft); }
-  .avatar{ width:30px; height:30px; border-radius:9px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
-    display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#0c0a06; }
-  .sidebar-footer .role{ font-size:7.5px; color:var(--text-faint); text-align:center; line-height:1.2; }
+  .sidebar-footer{ display:flex; flex-direction:column; align-items:center; gap:10px; width:100%; padding-top:14px; border-top:1px solid var(--border-soft); }
+  .avatar{ width:36px; height:36px; border-radius:11px; overflow:hidden; background:linear-gradient(140deg,var(--gold),#8a6b2e);
+    display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#0c0a06; }
+  .sidebar-footer .role{ font-size:8.5px; color:var(--text-faint); text-align:center; line-height:1.3; }
   .logout-btn{ color:var(--text-faint); cursor:pointer; padding:6px; border-radius:8px; transition:.2s;}
   .logout-btn:hover{ color:var(--error); background:rgba(248,113,113,0.08); }
   .logout-btn svg{ width:16px; height:16px; }
@@ -2481,9 +2450,9 @@ body.essence-authed #authGate{ display:none; }
   width:100%; max-width:380px; padding:36px 32px; border-radius:var(--radius-lg);
   background:var(--card); border:1px solid var(--border); box-shadow:0 20px 60px var(--shadow-color);
 }
-#authGate .auth-brand{ display:flex; align-items:center; justify-content:center; text-align:center; margin-bottom:30px; }
-#authGate .auth-brand-name{ font-family:'Cormorant Garamond', 'Inter', serif; font-size:23px; font-weight:600;
-  letter-spacing:3.5px; line-height:1.35; color:var(--gold); text-transform:uppercase; }
+#authGate .auth-brand{ display:flex; align-items:center; gap:10px; margin-bottom:26px; }
+#authGate .auth-brand svg{ width:26px; height:26px; color:var(--gold); }
+#authGate .auth-brand span{ font-size:18px; font-weight:700; letter-spacing:.2px; color:var(--text); }
 #authGate h1{ font-size:21px; font-weight:700; margin:0 0 6px; color:var(--text); }
 #authGate p.auth-sub{ color:var(--text-dim); font-size:13.5px; margin:0 0 24px; line-height:1.5; }
 #authGate label{ display:block; font-size:12.5px; color:var(--text-dim); margin-bottom:6px; font-weight:500; }
@@ -2503,7 +2472,8 @@ body.essence-authed #authGate{ display:none; }
 
 @media (max-width: 1000px){
   .app-shell{ grid-template-columns: 76px 1fr !important; gap:10px !important; padding:10px !important; }
-  .sidebar{ padding:16px 0 12px !important; }
+  .sidebar{ padding:16px 0 12px !important; overflow-y:auto !important; -webkit-overflow-scrolling:touch !important; scrollbar-width:none !important; }
+  .sidebar::-webkit-scrollbar{ display:none !important; }
   .nav-item{ width:52px !important; }
 
   /* POS: الكارت وCategory: قائمة الفئات — bقاو كيفرضو عرض ثابت
@@ -2556,6 +2526,22 @@ body.essence-authed #authGate{ display:none; }
 
 /* ---------- ≤600px: موبايل ---------- */
 @media (max-width: 600px){
+  /* ⚠️ إصلاح: .sidebar (النافبار العمودي) كان بلا overflow — إذا الأقسام (Home/POS/Products/
+     Stock/Sales/Debts/Suppliers/Expenses/Reports/Analytics/Settings) ماكانوش داخلين كاملين فـ
+     ارتفاع الشاشة (شائع على الهاتف، خصوصا لما يبان keyboard/browser chrome)، الأقسام الأخيرة
+     كانت كتخرج برا الشاشة بلا حتى طريقة توصلها — ماكانش scroll ولا drag. دابا سكرولابل عمودي،
+     بلا ما يبين scrollbar (نفس نمط .chips-row). */
+  .sidebar{ overflow-y:auto !important; -webkit-overflow-scrolling:touch !important; scrollbar-width:none !important; }
+  .sidebar::-webkit-scrollbar{ display:none !important; }
+  .nav-list{ flex-shrink:0 !important; }
+
+  /* الواجهة كانت شوية صغيرة/مضغوطة على الهاتف — تكبير بسيط للعناصر الأكثر استعمال */
+  .nav-item{ width:48px !important; padding:9px 0 7px !important; }
+  .nav-item svg{ width:21px !important; height:21px !important; }
+  .p-name{ font-size:13px !important; }
+  .p-price{ font-size:14px !important; }
+  .btn-primary, .btn-secondary, .checkout-btn{ font-size:13.5px !important; }
+
   .app-shell{ grid-template-columns: 60px 1fr !important; }
   .nav-item{ width:44px !important; padding:7px 0 6px !important; }
   .nav-item span{ display:none; } /* غير الأيقونة، بلا تسمية، باش توفر مكان */
@@ -2613,42 +2599,6 @@ body.essence-authed #authGate{ display:none; }
 .img-upload-actions{ display:flex; flex-direction:column; gap:6px; }
 .img-upload-actions .upload-btn{ height:32px; padding:0 12px; font-size:11.5px; }
 .img-upload-hint{ font-size:10px; color:var(--text-faint); margin-top:2px; }
-
-/* ===== MOBILE (≤600px): نفس تصميم الحاسوب بالضبط (نفس الألوان/الكروت/التخطيط) — غير:
-   1) السايدبار (.sidebar) كيتحول لـ bar سفلي أفقي (بحال تطبيقات الهاتف) بدل عمود يسار
-   2) النص عموما شوية أصغر (zoom مضبوط على منطقة المحتوى)
-   جاي فالأخير فالـ <style> عمدا (آخر تعريف كيربح، نفس القاعدة المتبعة فباقي الملف) باش يقدر
-   يبدل .sidebar/.nav-item/.app-shell الأصليين بلا ما نبحثو على كل نسخة مكررة منهم فالملف. ===== */
-@media (max-width: 600px){
-  .app-shell{
-    display:grid !important; grid-template-columns:1fr !important; grid-template-rows:1fr auto !important;
-    height:100vh !important; padding:8px !important; gap:8px !important;
-  }
-  .main-col-outer{ order:1; overflow:hidden !important; zoom:0.82; }
-
-  /* السايدبار → bar سفلي أفقي، scrollable إذا ماكفاش المكان لكل الأزرار */
-  .sidebar{
-    order:2; flex-direction:row !important; align-items:center !important;
-    width:100% !important; height:auto !important; padding:6px 8px !important;
-    border-radius: var(--radius-md) !important; overflow-x:auto; -webkit-overflow-scrolling:touch;
-  }
-  .sidebar .brand{ display:none !important; } /* لا داعي للوغو الكبير فبار ضيق سفلي */
-  .nav-list{
-    flex-direction:row !important; width:auto !important; flex:1 !important; gap:2px !important;
-    align-items:center !important;
-  }
-  .nav-item{
-    width:auto !important; min-width:46px; flex-shrink:0; padding:6px 5px 5px !important;
-  }
-  .nav-item span{ display:block !important; font-size:8px !important; } /* كانت مخبية قبل، دابا بانة بحجم صغير */
-  .nav-item.active::before{ display:none; } /* الخط الجانبي ديال active ماخدامش أفقي، نخبيوه */
-  .sidebar-footer{
-    flex-direction:row !important; width:auto !important; padding:0 0 0 8px !important;
-    border-top:none !important; border-left:1px solid var(--border-soft); margin-left:6px; gap:6px !important;
-  }
-  .sidebar-footer .role{ display:none !important; } /* بلا مكان كافي فبار سفلي ضيق */
-  #sidebar_userName{ display:none !important; }
-}
 </style>
 </head>
 <body>
@@ -2706,7 +2656,7 @@ body.essence-authed #authGate{ display:none; }
 <div id="authGate">
   <div class="auth-loading" id="authGate_loading">…</div>
   <form class="auth-card" id="authGate_form" style="display:none;">
-    <div class="auth-brand"><span class="auth-brand-name">PLATINIUM<br>PARFUMERIE</span></div>
+    <div class="auth-brand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v6M9 8h6l1.5 3.5a5 5 0 11-9 0z"/></svg><span>Essence</span></div>
     <h1 data-i18n="auth.title">Sign in</h1>
     <p class="auth-sub" data-i18n="auth.subtitle">Enter your store account to continue</p>
     <label for="authGate_email" data-i18n="auth.email">Email</label>
@@ -2792,8 +2742,7 @@ body.essence-authed #authGate{ display:none; }
 
 <div class="app-shell">
   <aside class="sidebar glass">
-    <div class="brand" id="sidebar_logoBtn" title="Add your logo" data-i18n-title="sidebar.addLogo" style="cursor:pointer;"></div>
-    <input type="file" id="sidebar_logoInput" accept="image/*" style="display:none;"/>
+    <div class="brand"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M12 2v6M9 8h6l1.5 3.5a5 5 0 11-9 0z"/></svg></div>
     <nav class="nav-list">
       <div class="nav-item active" data-page="home"><i data-lucide="layout-dashboard"></i><span data-i18n="nav.home">Home</span></div>
       <div class="nav-item" data-page="pos"><i data-lucide="shopping-bag"></i><span data-i18n="nav.pos">POS</span></div>
@@ -2820,7 +2769,7 @@ body.essence-authed #authGate{ display:none; }
 <div class="main-col">
 <header class="topbar glass">
 <div class="search-box"><i data-lucide="search"></i><input id="home_globalSearchInput" autocomplete="off" placeholder="Search products, invoices, debtors…" data-i18n-placeholder="topbar.searchPlaceholder" type="text"/></div>
-<div class="icon-btn sync-now-btn" id="home_syncNowBtn" title="Sync now" data-i18n-title="topbar.syncNow"><i data-lucide="refresh-cw"></i></div><div class="icon-btn" id="home_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
+<div class="icon-btn" id="home_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
 <div class="icon-btn notif-bell" title="Notifications" data-i18n-title="topbar.notifications"><i data-lucide="bell"></i><div class="dot"></div></div>
 <div class="spacer"></div>
 <button class="btn-primary" onclick="goToPage('pos')"><i data-lucide="plus"></i><span data-i18n="home.newSale">New Sale</span></button>
@@ -2828,8 +2777,8 @@ body.essence-authed #authGate{ display:none; }
 <div class="content-scroll">
 <div class="hero-banner">
 <div>
-<div class="eyebrow" id="home_heroEyebrow">—</div>
-<h2 id="home_heroGreeting">👋</h2>
+<div class="eyebrow" id="home_heroEyebrow">Friday, 10 July 2026 · Downtown Branch</div>
+<h2 id="home_heroGreeting" data-i18n="home.heroGreeting">Good afternoon, Rania 👋</h2>
 <p id="home_heroLine">You've made <b style="color:var(--text);">2,140 دج</b> today across 18 sales. Store is trending <b style="color:var(--success);">+6.2%</b> above yesterday.</p>
 </div>
 <div class="hero-icon"><i data-lucide="sparkles"></i></div>
@@ -2947,7 +2896,7 @@ body.essence-authed #authGate{ display:none; }
 <i data-lucide="chevron-down"></i>
 </div>
 <div class="icon-btn" id="pos_langBtn" title="Language" data-i18n-title="common.language"><i data-lucide="globe"></i></div>
-<div class="icon-btn sync-now-btn" id="pos_syncNowBtn" title="Sync now" data-i18n-title="topbar.syncNow"><i data-lucide="refresh-cw"></i></div><div class="icon-btn" id="pos_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
+<div class="icon-btn" id="pos_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
 <div class="icon-btn notif-bell" title="Notifications" data-i18n-title="topbar.notifications"><i data-lucide="bell"></i><div class="dot"></div></div>
 <button class="btn-primary btn-secondary" id="pos_addClientBtn"><i data-lucide="user-plus"></i><span data-i18n="pos.addClient">Add Client</span></button>
 <button class="btn-primary" id="pos_quickActionsBtn"><i data-lucide="zap"></i><span data-i18n="pos.quickActions">Quick Actions</span></button>
@@ -2955,19 +2904,7 @@ body.essence-authed #authGate{ display:none; }
 <div class="content-row">
 <!-- PRODUCT AREA -->
 <main class="product-area">
-<div class="chips-row">
-<div class="chip active">All</div>
-<div class="chip">Men</div>
-<div class="chip">Women</div>
-<div class="chip">Arabic</div>
-<div class="chip">French</div>
-<div class="chip">Luxury</div>
-<div class="chip">Niche</div>
-<div class="chip">Offers</div>
-<div class="chip">New Arrival</div>
-<div class="chip">Best Sellers</div>
-<div class="chip">Limited Edition</div>
-</div>
+<div class="chips-row" id="pos_chipsRow"></div>
 <div class="product-scroll">
 <div class="product-grid" id="pos_productGrid"></div>
 </div>
@@ -3067,7 +3004,7 @@ body.essence-authed #authGate{ display:none; }
 <div class="icon-btn" id="products_importBtn" title="Import" data-i18n-title="products.import"><i data-lucide="upload"></i></div>
 <input accept=".csv" id="products_importInput" style="display:none;" type="file"/>
 <div class="icon-btn" id="products_exportBtn" title="Export" data-i18n-title="products.export"><i data-lucide="download"></i></div>
-<div class="icon-btn sync-now-btn" id="products_syncNowBtn" title="Sync now" data-i18n-title="topbar.syncNow"><i data-lucide="refresh-cw"></i></div><div class="icon-btn" id="products_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
+<div class="icon-btn" id="products_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
 <div class="icon-btn notif-bell" title="Notifications" data-i18n-title="topbar.notifications"><i data-lucide="bell"></i><div class="dot"></div></div>
 <div class="spacer"></div>
 <button class="btn-primary" id="products_openDrawer"><i data-lucide="plus"></i><span data-i18n="products.addProduct">Add Product</span></button>
@@ -3279,7 +3216,7 @@ body.essence-authed #authGate{ display:none; }
 <div class="main-col">
 <header class="topbar glass">
 <div class="search-box"><i data-lucide="search"></i><input id="category_searchInput" data-i18n-placeholder="category.searchPlaceholder" placeholder="Search categories or brands…" type="text"/></div>
-<div class="icon-btn sync-now-btn" id="category_syncNowBtn" title="Sync now" data-i18n-title="topbar.syncNow"><i data-lucide="refresh-cw"></i></div><div class="icon-btn" id="category_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
+<div class="icon-btn" id="category_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
 <div class="icon-btn notif-bell" title="Notifications" data-i18n-title="topbar.notifications"><i data-lucide="bell"></i><div class="dot"></div></div>
 <div class="spacer"></div>
 <button class="btn-primary" id="category_addCategoryBtnTop"><i data-lucide="plus"></i><span data-i18n="category.addCategory">Add Category</span></button>
@@ -3353,7 +3290,7 @@ body.essence-authed #authGate{ display:none; }
 <div class="main-col">
 <header class="topbar glass">
 <div class="search-box"><i data-lucide="search"></i><input id="suppliers_searchInput" placeholder="Search supplier name, contact, phone…" data-i18n-placeholder="suppliers.searchPlaceholder" type="text"/></div>
-<div class="icon-btn sync-now-btn" id="suppliers_syncNowBtn" title="Sync now" data-i18n-title="topbar.syncNow"><i data-lucide="refresh-cw"></i></div><div class="icon-btn" id="suppliers_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
+<div class="icon-btn" id="suppliers_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
 <div class="icon-btn notif-bell" title="Notifications" data-i18n-title="topbar.notifications"><i data-lucide="bell"></i><div class="dot"></div></div>
 <div class="spacer"></div>
 <button class="btn-primary" id="suppliers_openDrawer"><i data-lucide="plus"></i><span data-i18n="suppliers.addSupplier">Add Supplier</span></button>
@@ -3464,7 +3401,7 @@ body.essence-authed #authGate{ display:none; }
 <div class="main-col">
 <header class="topbar glass">
 <div class="search-box"><i data-lucide="search"></i><input id="debts_searchInput" placeholder="Search debtor name or phone…" data-i18n-placeholder="debts.searchPlaceholder" type="text"/></div>
-<div class="icon-btn sync-now-btn" id="debts_syncNowBtn" title="Sync now" data-i18n-title="topbar.syncNow"><i data-lucide="refresh-cw"></i></div><div class="icon-btn" id="debts_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
+<div class="icon-btn" id="debts_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
 <div class="icon-btn notif-bell" title="Notifications" data-i18n-title="topbar.notifications"><i data-lucide="bell"></i><div class="dot"></div></div>
 <div class="spacer"></div>
 <button class="btn-primary" id="debts_openAddDebtor"><i data-lucide="user-plus"></i><span data-i18n="debts.addDebtor">Add Debtor</span></button>
@@ -3553,7 +3490,7 @@ body.essence-authed #authGate{ display:none; }
 <header class="topbar glass">
 <div class="search-box"><i data-lucide="search"></i><input id="sales_searchInput" placeholder="Search invoice #, customer…" data-i18n-placeholder="sales.searchPlaceholder" type="text"/></div>
 <div class="icon-btn" id="sales_exportBtn" title="Export" data-i18n-title="common.export"><i data-lucide="download"></i></div>
-<div class="icon-btn sync-now-btn" id="sales_syncNowBtn" title="Sync now" data-i18n-title="topbar.syncNow"><i data-lucide="refresh-cw"></i></div><div class="icon-btn" id="sales_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
+<div class="icon-btn" id="sales_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
 <div class="icon-btn notif-bell" title="Notifications" data-i18n-title="topbar.notifications"><i data-lucide="bell"></i><div class="dot"></div></div>
 <div class="spacer"></div>
 <a class="btn-primary btn-secondary" href="#" onclick="goToPage('reports'); return false;" style="text-decoration:none;"><i data-lucide="bar-chart-3"></i><span data-i18n="sales.viewReports">View Reports</span></a>
@@ -3642,7 +3579,7 @@ body.essence-authed #authGate{ display:none; }
 <div class="icon-btn" id="stock_topScanBtn" title="Scan barcode" data-i18n-title="pos.scanBarcode"><i data-lucide="scan-line"></i></div>
 <div class="topbar-divider"></div>
 <div class="icon-btn" title="Export" id="stock_exportBtn" data-i18n-title="common.export"><i data-lucide="download"></i></div>
-<div class="icon-btn sync-now-btn" id="stock_syncNowBtn" title="Sync now" data-i18n-title="topbar.syncNow"><i data-lucide="refresh-cw"></i></div><div class="icon-btn" id="stock_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
+<div class="icon-btn" id="stock_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
 <div class="icon-btn notif-bell" title="Notifications" data-i18n-title="topbar.notifications"><i data-lucide="bell"></i><div class="dot"></div></div>
 <div class="spacer"></div>
 <button class="btn-primary" id="stock_openDrawer"><i data-lucide="plus"></i><span data-i18n="stock.recordMovement">Record Movement</span></button>
@@ -3793,7 +3730,7 @@ body.essence-authed #authGate{ display:none; }
 <div class="main-col">
 <header class="topbar glass">
 <div class="search-box"><i data-lucide="search"></i><input id="expenses_searchInput" placeholder="Search expenses…" data-i18n-placeholder="expenses.searchPlaceholder" type="text"/></div>
-<div class="icon-btn sync-now-btn" id="expenses_syncNowBtn" title="Sync now" data-i18n-title="topbar.syncNow"><i data-lucide="refresh-cw"></i></div><div class="icon-btn" id="expenses_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
+<div class="icon-btn" id="expenses_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
 <div class="icon-btn notif-bell" title="Notifications" data-i18n-title="topbar.notifications"><i data-lucide="bell"></i><div class="dot"></div></div>
 <div class="spacer"></div>
 <button class="btn-primary" id="expenses_openDrawer"><i data-lucide="plus"></i><span data-i18n="expenses.addExpense">Add Expense</span></button>
@@ -3892,7 +3829,7 @@ body.essence-authed #authGate{ display:none; }
 <span style="font-size:12.5px; color:var(--text-dim);">Friday, 10 July 2026</span>
 </div>
 <div class="spacer"></div>
-<div class="icon-btn sync-now-btn" id="reports_syncNowBtn" title="Sync now" data-i18n-title="topbar.syncNow"><i data-lucide="refresh-cw"></i></div><div class="icon-btn" id="reports_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
+<div class="icon-btn" id="reports_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
 <div class="icon-btn notif-bell" title="Notifications" data-i18n-title="topbar.notifications"><i data-lucide="bell"></i><div class="dot"></div></div>
 <button class="btn-primary" id="reports_exportPdfBtn"><i data-lucide="download"></i><span data-i18n="reports.exportPdf">Export PDF</span></button>
 </header>
@@ -3912,25 +3849,16 @@ body.essence-authed #authGate{ display:none; }
 <div class="stat-top"><div class="stat-icon red"><i data-lucide="wallet"></i></div><span class="stat-trend down" id="reports_todayExpensesTrend">+3.1%</span></div>
 <div class="stat-value" id="reports_todayExpenses">0 دج</div><div class="stat-label" data-i18n="reports.todayExpenses">Today's Expenses</div>
 </div>
-<div class="stat-card" id="reports_profitCard">
+<div class="stat-card">
 <div class="stat-top"><div class="stat-icon gold"><i data-lucide="trending-up"></i></div><span class="stat-trend up" id="reports_todayProfitTrend">+9.4%</span></div>
 <div class="stat-value" id="reports_todayProfit">0 دج</div><div class="stat-label" data-i18n="reports.profitGross">Profit (Gross)</div>
 </div>
-<div class="stat-card" id="reports_netProfitCard">
+<div class="stat-card">
 <div class="stat-top"><div class="stat-icon green"><i data-lucide="piggy-bank"></i></div><span class="stat-trend up" id="reports_todayNetProfitTrend">+7.8%</span></div>
 <div class="stat-value" id="reports_todayNetProfit">0 دج</div><div class="stat-label" data-i18n="reports.netProfit">Net Profit</div>
 </div>
-<!-- كاشير بوحدو: بديل بلا cost/margin — عدد حركات اليوم + المبلغ بعد المصاريف (بلا ربح/تكلفة) -->
-<div class="stat-card" id="reports_todayTxnCard" style="display:none;">
-<div class="stat-top"><div class="stat-icon gold"><i data-lucide="activity"></i></div></div>
-<div class="stat-value" id="reports_todayTxnCount">0</div><div class="stat-label" data-i18n="reports.todayMovements">Today's Movements</div>
 </div>
-<div class="stat-card" id="reports_todayNetSimpleCard" style="display:none;">
-<div class="stat-top"><div class="stat-icon green"><i data-lucide="piggy-bank"></i></div></div>
-<div class="stat-value" id="reports_todayNetSimple">0 دج</div><div class="stat-label" data-i18n="reports.todayAfterExpenses">Total After Expenses</div>
-</div>
-</div>
-<div class="stat-row" style="grid-template-columns:1fr; margin-bottom:14px;" id="reports_capitalRow">
+<div class="stat-row" style="grid-template-columns:1fr; margin-bottom:14px;">
 <div class="stat-card" style="display:flex; align-items:center; justify-content:space-between; cursor:default; gap:14px; flex-wrap:wrap;">
 <div>
 <div class="stat-top"><div class="stat-icon gold"><i data-lucide="wallet"></i></div></div>
@@ -3942,7 +3870,7 @@ body.essence-authed #authGate{ display:none; }
 </button>
 </div>
 </div>
-<div class="panel" style="margin-bottom:14px;" id="reports_periodPanel">
+<div class="panel" style="margin-bottom:14px;">
 <div class="panel-title-row">
 <div><h3 data-i18n="reports.periodPanelTitle">Income, Expenses &amp; Profit by Period</h3><p data-i18n="reports.periodPanelSub">Same breakdown — choose the period you want to review</p></div>
 <div class="range-chips" id="reports_periodChips">
@@ -3954,7 +3882,7 @@ body.essence-authed #authGate{ display:none; }
 </div>
 <div class="period-stat-row" id="reports_periodStatRow"></div>
 </div>
-<div class="grid-row cols-7-5" id="reports_chartsRow">
+<div class="grid-row cols-7-5">
 <!-- Sales trend chart -->
 <div class="panel">
 <div class="panel-title-row">
@@ -3976,13 +3904,13 @@ body.essence-authed #authGate{ display:none; }
 <div class="donut-wrap">
 <div class="donut-center">
 <svg height="180" id="reports_donutChart" viewbox="0 0 180 180" width="180"></svg>
-<div class="donut-label"><div class="pct">39.7%</div><div class="lbl" data-i18n="reports.blendedMargin">Blended Margin</div></div>
+<div class="donut-label"><div class="pct" id="reports_donutPct">0%</div><div class="lbl" data-i18n="reports.blendedMargin">Blended Margin</div></div>
 </div>
 <div class="donut-legend" id="reports_donutLegend"></div>
 </div>
 </div>
 </div>
-<div class="grid-row cols-2" id="reports_topMoversRow">
+<div class="grid-row cols-2">
 <!-- Top products -->
 <div class="panel">
 <div class="panel-title-row"><div><h3 data-i18n="reports.topProducts">Top Products</h3><p data-i18n="reports.rankedByRevenue">Ranked by revenue this period</p></div></div>
@@ -3994,7 +3922,7 @@ body.essence-authed #authGate{ display:none; }
 <div id="reports_topBrands"></div>
 </div>
 </div>
-<div class="grid-row" style="grid-template-columns:1fr; margin-bottom:20px;" id="reports_marginRow">
+<div class="grid-row" style="grid-template-columns:1fr; margin-bottom:20px;">
 <div class="panel">
 <div class="panel-title-row"><div><h3 data-i18n="reports.marginBreakdown">Margin Breakdown by Category</h3><p data-i18n="reports.marginBreakdownSub">Purchase cost vs. revenue vs. profit</p></div></div>
 <table class="margin-table">
@@ -4042,7 +3970,7 @@ body.essence-authed #authGate{ display:none; }
 <span style="font-size:12.5px; color:var(--text-dim);" data-i18n="analytics.allBranches">All Branches</span>
 </div>
 <div class="spacer"></div>
-<div class="icon-btn sync-now-btn" id="analytics_syncNowBtn" title="Sync now" data-i18n-title="topbar.syncNow"><i data-lucide="refresh-cw"></i></div><div class="icon-btn" id="analytics_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
+<div class="icon-btn" id="analytics_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
 <div class="icon-btn notif-bell" title="Notifications" data-i18n-title="topbar.notifications"><i data-lucide="bell"></i><div class="dot"></div></div>
 <button class="btn-primary" id="analytics_exportPdfBtn"><i data-lucide="download"></i><span data-i18n="analytics.exportPdf">Export PDF</span></button>
 </header>
@@ -4093,7 +4021,7 @@ body.essence-authed #authGate{ display:none; }
 <div class="donut-wrap">
 <div class="donut-center">
 <svg height="180" id="analytics_payDonut" viewbox="0 0 180 180" width="180"></svg>
-<div class="donut-label"><div class="pct">412</div><div class="lbl" data-i18n="analytics.transactions">Transactions</div></div>
+<div class="donut-label"><div class="pct" id="analytics_payDonutPct">0</div><div class="lbl" data-i18n="analytics.transactions">Transactions</div></div>
 </div>
 <div class="donut-legend" id="analytics_payLegend"></div>
 </div>
@@ -4139,7 +4067,7 @@ body.essence-authed #authGate{ display:none; }
 <span style="font-size:12.5px; color:var(--text-dim);" data-i18n="settings.topbarSub">Manage your store, branches, team and preferences</span>
 </div>
 <div class="spacer"></div>
-<div class="icon-btn sync-now-btn" id="settings_syncNowBtn" title="Sync now" data-i18n-title="topbar.syncNow"><i data-lucide="refresh-cw"></i></div><div class="icon-btn" id="settings_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
+<div class="icon-btn" id="settings_themeToggle" title="Toggle theme" data-i18n-title="topbar.toggleTheme"><i data-lucide="moon"></i></div>
 <span id="settings_dirtyBadge" style="display:none; font-size:11px; color:var(--gold); background:var(--gold-dim); padding:5px 10px; border-radius:20px; margin-right:8px; white-space:nowrap;" data-i18n="settings.unsavedChanges">● Unsaved changes</span>
 <button class="btn-primary" id="settings_saveTop"><i data-lucide="check"></i><span data-i18n="common.saveChanges">Save Changes</span></button>
 </header>
@@ -4147,12 +4075,7 @@ body.essence-authed #authGate{ display:none; }
 <nav class="settings-nav glass">
 <div class="set-nav-item active" data-sec="store"><i data-lucide="store"></i><span data-i18n="settings.navStore">Store Info</span></div>
 <div class="set-nav-item" data-sec="branches"><i data-lucide="building-2"></i><span data-i18n="settings.navBranches">Branches</span></div>
-<div class="set-nav-item" data-sec="team" style="display:none;"><i data-lucide="users"></i><span data-i18n="settings.navTeam">Team &amp; Roles</span></div>
-<!-- ⚠️ مخبية عمدا: هاد الصفحة كانت ديمو محلي بالكامل (AppState.team فـ localStorage)، بلا أي علاقة
-     حقيقية بـ store_members/auth.users فـ Supabase — تعديل الدور منها ماكان كيبدل حتى صلاحية فعلية.
-     القرار: التعامل مع الفريق/الأدوار الحقيقي يدويا عبر Supabase Auth Dashboard كافي لدابا، بلا
-     حاجة لـ Edge Function. الكود ديال الصفحة باقي فالملف (بلا مس) تحسبا لقرار مستقبلي، غير
-     مخبية من التنقل. -->
+<div class="set-nav-item" data-sec="team"><i data-lucide="users"></i><span data-i18n="settings.navTeam">Team &amp; Roles</span></div>
 <div class="set-nav-item" data-sec="payments"><i data-lucide="credit-card"></i><span data-i18n="settings.navPayments">Payment Methods</span></div>
 <div class="set-nav-item" data-sec="receipts"><i data-lucide="printer"></i><span data-i18n="settings.navReceipts">Receipts &amp; Printing</span></div>
 <div class="set-nav-item" data-sec="notifications"><i data-lucide="bell"></i><span data-i18n="settings.navNotifications">Notifications</span></div>
@@ -4166,19 +4089,29 @@ body.essence-authed #authGate{ display:none; }
 <div class="panel">
 <div class="panel-title-row"><div><h3 data-i18n="settings.storeIdentityTitle">Store Identity</h3><p data-i18n="settings.storeIdentitySub">Shown on receipts, invoices and the topbar</p></div></div>
 <div class="logo-uploader">
-<div class="logo-preview" id="settings_logoPreview"></div>
+<div class="logo-preview" id="settings_logoPreview"><svg fill="none" stroke-linecap="round" stroke-width="2" viewbox="0 0 24 24"><path d="M12 2v6M9 8h6l1.5 3.5a5 5 0 11-9 0z"></path></svg></div>
 <button class="upload-btn" id="settings_uploadLogoBtn"><i data-lucide="image-plus"></i><span data-i18n="settings.uploadLogo">Upload New Logo</span></button>
 <input type="file" id="settings_logoInput" accept="image/*" style="display:none;"/>
 </div>
 <div class="field"><label data-i18n="settings.storeNameLabel">Store Name</label><input type="text" id="settings_storeName" value="Essence — Luxury Perfumes"/></div>
 <div class="field-row">
-<div class="field"><label data-i18n="settings.currencyLabel">Currency</label><select id="settings_currency" disabled title="Currently locked to Algerian Dinar" data-i18n-title="settings.currencyLockedTitle"><option>دج</option></select></div>
+<div class="field"><label data-i18n="settings.currencyLabel">Currency</label><select id="settings_currency">
+  <option value="DZD">DZD — دج (دينار جزائري)</option>
+  <option value="USD">USD — $ (US Dollar)</option>
+  <option value="EUR">EUR — € (Euro)</option>
+  <option value="MAD">MAD — د.م. (Moroccan Dirham)</option>
+  <option value="TND">TND — د.ت (Tunisian Dinar)</option>
+  <option value="EGP">EGP — ج.م (Egyptian Pound)</option>
+  <option value="SAR">SAR — ر.س (Saudi Riyal)</option>
+  <option value="AED">AED — د.إ (UAE Dirham)</option>
+  <option value="GBP">GBP — £ (British Pound)</option>
+</select></div>
 <div class="field"><label data-i18n="settings.taxRateLabel">Tax Rate (%)</label><input type="number" id="settings_taxRate" value="0"/></div>
 </div>
-<div class="field"><label data-i18n="settings.addressLabel">Business Address</label><input type="text" id="settings_address" value="Al Baraka Mall, Downtown, 3rd Floor"/></div>
+<div class="field"><label data-i18n="settings.addressLabel">Business Address</label><input type="text" id="settings_address" placeholder="e.g. Al Baraka Mall, Downtown, 3rd Floor"/></div>
 <div class="field-row">
-<div class="field"><label data-i18n="settings.phoneLabel">Phone</label><input type="text" id="settings_phone" value="+971 4 555 0192"/></div>
-<div class="field"><label data-i18n="settings.emailLabel">Email</label><input type="text" id="settings_email" value="hello@essence-perfumes.com"/></div>
+<div class="field"><label data-i18n="settings.phoneLabel">Phone</label><input type="text" id="settings_phone" placeholder="e.g. +213 555 000 000"/></div>
+<div class="field"><label data-i18n="settings.emailLabel">Email</label><input type="text" id="settings_email" placeholder="e.g. hello@yourstore.com"/></div>
 </div>
 </div>
 </section>
@@ -4237,7 +4170,11 @@ body.essence-authed #authGate{ display:none; }
 <div class="toggle-row"><div class="toggle-info"><div class="t-name" data-i18n="settings.lowStockAlertsTitle">Low stock alerts</div><div class="t-sub" data-i18n="settings.lowStockAlertsSub">When a product drops to its threshold</div></div><div class="switch on" data-t="4"></div></div>
 <div class="toggle-row"><div class="toggle-info"><div class="t-name" data-i18n="settings.newDebtTitle">New debt / credit sale</div><div class="t-sub" data-i18n="settings.newDebtSub">When a sale is made on credit or split</div></div><div class="switch on" data-t="5"></div></div>
 <div class="toggle-row"><div class="toggle-info"><div class="t-name" data-i18n="settings.dailySummaryTitle">Daily summary email</div><div class="t-sub" data-i18n="settings.dailySummarySub">Sent every night at closing time</div></div><div class="switch" data-t="6"></div></div>
-<div class="toggle-row"><div class="toggle-info"><div class="t-name" data-i18n="settings.largeExpenseTitle">Large expense flag</div><div class="t-sub" id="settings_largeExpenseSub">Notify when an expense exceeds 500 دج</div></div><div class="switch on" data-t="7"></div></div>
+<div class="toggle-row"><div class="toggle-info"><div class="t-name" data-i18n="settings.largeExpenseTitle">Large expense flag</div><div class="t-sub" id="settings_largeExpenseSub">Notify when an expense exceeds 500 دج</div></div>
+<div style="display:flex; align-items:center; gap:10px;">
+<input type="number" id="settings_largeExpenseThreshold" min="0" step="1" style="width:90px; height:32px; padding:0 8px; border-radius:8px; border:1px solid var(--border); background:var(--bg-2); color:var(--text); font-size:12.5px;"/>
+<div class="switch on" data-t="7"></div>
+</div></div>
 </div>
 </section>
 <!-- APPEARANCE -->
@@ -4381,7 +4318,6 @@ const I18N = {
     'nav.category':'Category', 'nav.debts':'Debts', 'nav.sales':'Sales', 'nav.stock':'Stock',
     'nav.expenses':'Expenses', 'nav.reports':'Reports', 'nav.analytics':'Analytics', 'nav.settings':'Settings',
     'sidebar.role':'Store Manager',
-    'sidebar.addLogo':'Add your logo',
     'role.owner':'Owner', 'role.manager':'Manager', 'role.cashier':'Cashier',
     'auth.title':'Sign in', 'auth.subtitle':'Enter your store account to continue',
     'auth.email':'Email', 'auth.password':'Password', 'auth.signIn':'Sign in', 'auth.signingIn':'Signing in…',
@@ -4389,7 +4325,7 @@ const I18N = {
     'topbar.searchPlaceholder':'Search products, invoices, debtors…',
     'topbar.searchProducts':'Products', 'topbar.searchInvoices':'Invoices', 'topbar.searchDebtors':'Debtors',
     'topbar.searchNoResults':'No matches found.',
-    'topbar.toggleTheme':'Toggle theme', 'topbar.notifications':'Notifications', 'topbar.syncNow':'Sync now',
+    'topbar.toggleTheme':'Toggle theme', 'topbar.notifications':'Notifications',
     'sync.offline':"You're offline", 'sync.pending':'{n} change(s) waiting to sync',
     'sync.syncing':'Syncing…', 'sync.retryNow':'Retry now',
     'notif.markAllRead':'Mark all as read', 'notif.empty':'No notifications yet',
@@ -4681,7 +4617,6 @@ const I18N = {
     'reports.exportPdf':'Export PDF',
     'reports.todayIncome':"Today's Income", 'reports.todayExpenses':"Today's Expenses",
     'reports.profitGross':'Profit (Gross)', 'reports.netProfit':'Net Profit',
-    'reports.todayMovements':"Today's Movements", 'reports.todayAfterExpenses':'Total After Expenses',
     'reports.capitalLabel':'Your Capital (Cash on Hand)', 'reports.manage':'Manage',
     'reports.manageCapitalTitle':'Manage Your Capital', 'reports.currentBalance':'Current balance: {amount} دج',
     'reports.editBalance':'Edit', 'reports.deposit':'Deposit', 'reports.withdraw':'Withdraw', 'reports.history':'History',
@@ -4753,13 +4688,11 @@ const I18N = {
     'stock.skuNotFound':'No movement history found for SKU "{code}".',
     'stock.pleaseEnterQty':'Please enter a quantity greater than 0.',
     'stock.scanPrompt':'Scan or type a product SKU:',
-    'home.greetingMorningNamed':'Good morning, {name} 👋', 'home.greetingMorningGeneric':'Good morning 👋',
-    'home.greetingAfternoonNamed':'Good afternoon, {name} 👋', 'home.greetingAfternoonGeneric':'Good afternoon 👋',
-    'home.greetingEveningNamed':'Good evening, {name} 👋', 'home.greetingEveningGeneric':'Good evening 👋',
+    'home.heroGreeting':'Good afternoon, Rania 👋',
     "home.heroLineWithSalesOne":"You've made {amount} today across {n} sale.",
     "home.heroLineWithSalesOther":"You've made {amount} today across {n} sales.",
     'home.heroLineNoSales':'No sales recorded yet today.', 'home.startASale':'Start a sale →',
-    'home.downtownBranch':'Essence — Luxury Perfumes',
+    'home.downtownBranch':'Downtown Branch',
     'home.saleCountOne':'{n} sale', 'home.saleCountOther':'{n} sales',
     'home.marginLabel':'{pct}% margin', 'home.debtorCountOne':'{n} debtor', 'home.debtorCountOther':'{n} debtors',
     'home.needsAttention':'Needs attention',
@@ -4797,7 +4730,6 @@ const I18N = {
     'nav.category':'Catégorie', 'nav.debts':'Dettes', 'nav.sales':'Ventes', 'nav.stock':'Stock',
     'nav.expenses':'Dépenses', 'nav.reports':'Rapports', 'nav.analytics':'Analytique', 'nav.settings':'Paramètres',
     'sidebar.role':'Gérante du magasin',
-    'sidebar.addLogo':'Ajouter votre logo',
     'role.owner':'Propriétaire', 'role.manager':'Responsable', 'role.cashier':'Caissier',
     'auth.title':'Connexion', 'auth.subtitle':'Entrez les identifiants de votre magasin pour continuer',
     'auth.email':'E-mail', 'auth.password':'Mot de passe', 'auth.signIn':'Se connecter', 'auth.signingIn':'Connexion en cours…',
@@ -4805,7 +4737,7 @@ const I18N = {
     'topbar.searchPlaceholder':'Rechercher produits, factures, débiteurs…',
     'topbar.searchProducts':'Produits', 'topbar.searchInvoices':'Factures', 'topbar.searchDebtors':'Débiteurs',
     'topbar.searchNoResults':'Aucun résultat.',
-    'topbar.toggleTheme':'Changer le thème', 'topbar.notifications':'Notifications', 'topbar.syncNow':'Synchroniser',
+    'topbar.toggleTheme':'Changer le thème', 'topbar.notifications':'Notifications',
     'sync.offline':'Vous êtes hors ligne', 'sync.pending':'{n} changement(s) en attente de synchro',
     'sync.syncing':'Synchronisation…', 'sync.retryNow':'Réessayer',
     'notif.markAllRead':'Tout marquer comme lu', 'notif.empty':'Aucune notification pour le moment',
@@ -5097,7 +5029,6 @@ const I18N = {
     'reports.exportPdf':'Exporter en PDF',
     'reports.todayIncome':"Revenus du jour", 'reports.todayExpenses':"Dépenses du jour",
     'reports.profitGross':'Profit (Brut)', 'reports.netProfit':'Profit net',
-    'reports.todayMovements':"Mouvements du jour", 'reports.todayAfterExpenses':'Total après dépenses',
     'reports.capitalLabel':'Votre capital (liquidités disponibles)', 'reports.manage':'Gérer',
     'reports.manageCapitalTitle':'Gérer votre capital', 'reports.currentBalance':'Solde actuel : {amount} دج',
     'reports.editBalance':'Modifier', 'reports.deposit':'Dépôt', 'reports.withdraw':'Retrait', 'reports.history':'Historique',
@@ -5169,13 +5100,11 @@ const I18N = {
     'stock.skuNotFound':'Aucun historique de mouvement trouvé pour le SKU « {code} ».',
     'stock.pleaseEnterQty':'Veuillez entrer une quantité supérieure à 0.',
     'stock.scanPrompt':'Scannez ou saisissez un SKU produit :',
-    'home.greetingMorningNamed':'Bonjour, {name} 👋', 'home.greetingMorningGeneric':'Bonjour 👋',
-    'home.greetingAfternoonNamed':'Bon après-midi, {name} 👋', 'home.greetingAfternoonGeneric':'Bon après-midi 👋',
-    'home.greetingEveningNamed':'Bonsoir, {name} 👋', 'home.greetingEveningGeneric':'Bonsoir 👋',
+    'home.heroGreeting':'Bon après-midi, Rania 👋',
     'home.heroLineWithSalesOne':"Vous avez fait {amount} aujourd'hui sur {n} vente.",
     'home.heroLineWithSalesOther':"Vous avez fait {amount} aujourd'hui sur {n} ventes.",
     'home.heroLineNoSales':"Aucune vente enregistrée aujourd'hui.", 'home.startASale':'Commencer une vente →',
-    'home.downtownBranch':'Essence — Luxury Perfumes',
+    'home.downtownBranch':'Succursale Downtown',
     'home.saleCountOne':'{n} vente', 'home.saleCountOther':'{n} ventes',
     'home.marginLabel':'{pct}% de marge', 'home.debtorCountOne':'{n} débiteur', 'home.debtorCountOther':'{n} débiteurs',
     'home.needsAttention':'Nécessite attention',
@@ -5330,13 +5259,22 @@ window.AppState = {
   // ===== إعدادات مشتركة (Settings) — تقرا منها POS/Sales مباشرة، كتتحفظ مع الباقي فـ localStorage =====
   // currency: 0 = DZD (الدينار الجزائري) — الوحيدة المتوفرة، الـ select فـ Settings دابا مقفول عليها
   settings: {
-    taxRate: 0, storeName: 'Essence — Luxury Perfumes', currency: 0,
+    taxRate: 0, storeName: 'Essence — Luxury Perfumes', currency: 'DZD',
+    address: '', phone: '', email: '', largeExpenseThreshold: 500,
     receiptHeaderLine1: 'Essence — Luxury Perfumes', receiptHeaderLine2: '',
     receiptFooterLine1: 'Thank you for shopping with us!', receiptFooterLine2: '',
-    // فارغ بالتصميم: التطبيق كيبدا بلا شعار افتراضي — كل عميل كيختار شعارو الخاص أول ما يفتح
-    // البرنامج (سيدبار أو Settings)، وكيتحفظ محليا (localStorage عبر نفس آلية AppState).
-    logoDataUrl: '',
   },
+};
+
+// ===== عملة حقيقية قابلة للاختيار (كانت مقفولة على دج بوحدها) — مصدر واحد مشترك يستعملوه كل
+// money() المكررة فـ الصفحات المختلفة (POS/Reports/Analytics/Settings). كود بلا رمز خاص = suffix
+// بسيط ("1,500 USD") — بلا تعقيد اتجاه (RTL/LTR) للرموز كيفما $/€ فبداية أو نهاية الرقم.
+window.__CURRENCY_LABELS = { DZD:'دج', USD:'USD', EUR:'EUR', MAD:'MAD', TND:'TND', EGP:'EGP', SAR:'SAR', AED:'AED', GBP:'GBP' };
+window.__money = function(n){
+  let cur = window.AppState.settings.currency;
+  if(typeof cur !== 'string' || !cur) cur = 'DZD'; // بيانات قديمة كانت رقم (index) — الافتراضي كان ديما دج
+  const label = window.__CURRENCY_LABELS[cur] || cur;
+  return Math.round(n||0).toLocaleString() + ' ' + label;
 };
 
 // ===== PERSISTENCE: تحميل الحالة المحفوظة من localStorage =====
@@ -5501,7 +5439,7 @@ window.__processReturn = function(sale){
     if(window.AppState.stockMovements){
       window.AppState.stockMovements.unshift({
         name: item.name, sku: p ? p.sku : '', type:'in', qty: item.qty,
-        reason: tf('sales.stockReturnReason', {id: sale.id}), who: window.__essenceActorName(), time: timeLabel, c1: p ? p.c1 : '#7C5CFF',
+        reason: tf('sales.stockReturnReason', {id: sale.id}), who:'You', time: timeLabel, c1: p ? p.c1 : '#7C5CFF',
         _txn: true,
       });
     }
@@ -5630,7 +5568,7 @@ window.__productVisualHTML = function(p, opts){
   const TODAY_LABEL = window.__todayLabel();
   const LOW_STOCK_THRESHOLD = 15;
 
-  function money(n){ return Math.round(n||0).toLocaleString() + ' دج'; }
+  function money(n){ return window.__money(n); }
   function saleTotal(s){
     if(window.__saleFinancials) return window.__saleFinancials(s).total;
     return s.items.reduce((x,i)=>x + i.qty*i.price, 0);
@@ -5660,15 +5598,7 @@ window.__productVisualHTML = function(p, opts){
 
     let weekday = '';
     try{ weekday = new Date(TODAY_LABEL).toLocaleDateString(window.__i18n.lang === 'fr' ? 'fr-FR' : 'en-US', { weekday:'long' }); }catch(e){}
-    document.getElementById('home_heroEyebrow').textContent = `${weekday ? weekday+', ' : ''}${TODAY_LABEL.replace(/(\d+) (\w+) (\d+)/, '$1 $2 $3')} · ${(window.AppState.settings && window.AppState.settings.storeName) || t('home.downtownBranch')}`;
-    // ترحيب ديناميكي: حسب الوقت الحقيقي ديال الجهاز + الاسم الحقيقي ديال اللي دخل (من store_members،
-    // عبر __essenceActorName) — بلا session (local-only) كيبقى ترحيب عام بلا اسم (بلا "Rania" هاردكودد).
-    const hour = new Date().getHours();
-    const period = hour < 12 ? 'Morning' : hour < 18 ? 'Afternoon' : 'Evening';
-    const actorName = (window.__essenceStore && window.__essenceStore.displayName) || null;
-    document.getElementById('home_heroGreeting').textContent = actorName
-      ? tf(`home.greeting${period}Named`, {name: actorName})
-      : t(`home.greeting${period}Generic`);
+    document.getElementById('home_heroEyebrow').textContent = `${weekday ? weekday+', ' : ''}${TODAY_LABEL.replace(/(\d+) (\w+) (\d+)/, '$1 $2 $3')} · ${t('home.downtownBranch')}`;
     document.getElementById('home_heroLine').innerHTML = todaySales.length
       ? tf(todaySales.length===1?'home.heroLineWithSalesOne':'home.heroLineWithSalesOther', {amount: `<b style="color:var(--text);">${money(todayTotal)}</b>`, n: todaySales.length})
       : `${t('home.heroLineNoSales')} <a href="#" onclick="goToPage('pos');return false;" style="color:var(--purple);">${t('home.startASale')}</a>`;
@@ -5775,20 +5705,24 @@ window.__productVisualHTML = function(p, opts){
     }).join('') : `<div style="padding:20px; text-align:center; color:var(--text-faint); font-size:13px;">${t('home.allWellStocked')}</div>`;
 
     /* ---------- Branch performance ----------
-       ⚠️ ماكاين حتى نظام multi-branch/sales-per-branch حقيقي فهاد التطبيق (كل البيوعات فـ AppState.sales
-       واحدة، بلا حقل branch)، فهاد الجدول بقا ديكور مؤقتا. خاصو data model جديد إذا الحاجة ظهرت. */
-    const branches = [
-      { name:'Downtown', sub:t('home.mainBranch'), value: money(todayTotal), icon:'store', live:true },
-      { name:'Marina Mall', sub:tf('home.employeesCountOther', {n:6}), value:'1,480 دج', icon:'building-2', live:true },
-      { name:'Airport Road', sub:tf('home.employeesCountOther', {n:3}), value:'690 دج', icon:'plane', live:false },
-    ];
-    document.getElementById('home_branchList').innerHTML = branches.map(b => `
+       ⚠️ إصلاح: كانت Marina Mall/Airport Road مكتوبين بالقيمة (1,480 دج / 690 دج) هاردكودد فالكود
+       نفسو — بلا علاقة بأي بيانات حقيقية، كيبانو حتى لمحل جديد بلا شي بيع. دابا كنقراو من الفروع
+       الحقيقية المسجلة فـ Settings → Branches (window.AppState.branches). ⚠️ ماكاين حتى نظام
+       multi-branch/sales-per-branch حقيقي فهاد التطبيق (كل البيوعات فـ AppState.sales واحدة، بلا
+       حقل branch)، فـ "value" (رقم المبيعات) ماكينقدروش نحسبوه بالفرع — كنبينو todayTotal الحقيقي
+       غير للفرع الأول (الرئيسي)، والباقي بلا رقم مبيعات (خاصو data model جديد إذا الحاجة ظهرت). */
+    const realBranches = Array.isArray(window.AppState.branches) ? window.AppState.branches : [];
+    const branches = realBranches.map((b, i) => ({
+      name: b.name, sub: tf(b.employees===1?'settings.employeesCountOne':'settings.employeesCountOther', {sub:b.sub||'', n:b.employees||0}),
+      value: i === 0 ? money(todayTotal) : '—', icon: b.icon || 'store', live: true,
+    }));
+    document.getElementById('home_branchList').innerHTML = branches.length ? branches.map(b => `
       <div class="branch-tile">
         <div class="branch-icon"><i data-lucide="${b.icon}"></i></div>
         <div class="branch-info"><div class="branch-name">${b.name}</div><div class="branch-sub">${b.sub}</div></div>
         <div class="branch-right"><div class="branch-value">${b.value}</div>
           <span class="branch-badge" style="${b.live ? '' : 'background:var(--fill-2); color:var(--text-faint);'}">${b.live ? t('home.openNow') : t('home.closed')}</span></div>
-      </div>`).join('');
+      </div>`).join('') : `<div style="padding:20px; text-align:center; color:var(--text-faint); font-size:13px;">${t('settings.noBranchesYet')}</div>`;
 
     /* ---------- Top products اليوم (حقيقي، محسوب من بيوعات اليوم) ---------- */
     const agg = {};
@@ -5840,6 +5774,24 @@ window.__productVisualHTML = function(p, opts){
   const posSearchInput = document.getElementById('pos_searchInput');
   let activeChip = 'All';
 
+  // ⚠️ إصلاح: `.chips-row` كانت HTML ثابت (All/Men/Women/Arabic/French/Luxury/Niche/Offers/New
+  // Arrival/Best Sellers/Limited Edition) ديمو بلا حتى event listener — الضغط عليها ماكان يدير والو.
+  // دابا كتتبنى من الفئات الحقيقية لي زادها صاحب المحل (window.AppState.categories).
+  const chipsRow = document.getElementById('pos_chipsRow');
+  function renderChips(){
+    if(!chipsRow) return;
+    const cats = (window.AppState.categories || []).map(c => (typeof c === 'object' ? c.name : c)).filter(Boolean);
+    const chips = ['All', ...cats];
+    chipsRow.innerHTML = chips.map(name => `<div class="chip ${name === activeChip ? 'active' : ''}" data-cat="${name}">${name}</div>`).join('');
+  }
+  chipsRow && chipsRow.addEventListener('click', (e) => {
+    const chip = e.target.closest('.chip');
+    if(!chip) return;
+    chipsRow.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    renderGrid(chip.dataset.cat);
+  });
+
   function renderGrid(filterCat){
     if(filterCat !== undefined) activeChip = filterCat;
     let list = (!activeChip || activeChip === 'All') ? products : products.filter(p => (p.tags||[]).includes(activeChip) || p.cat === activeChip);
@@ -5866,8 +5818,9 @@ window.__productVisualHTML = function(p, opts){
     }).join('') || `<p style="color:var(--text-faint); font-size:12.5px; padding:20px;">${t('pos.noProductsInCategory')}</p>`;
     window.__lucideCreateIcons();
   }
+  renderChips();
   renderGrid('All');
-  window.__pageRefreshers.pos = () => { syncStoreName(); renderGrid(); renderCart(); };
+  window.__pageRefreshers.pos = () => { syncStoreName(); renderChips(); renderGrid(); renderCart(); };
   function syncStoreName(){
     const el = document.getElementById('pos_storeSelectName');
     if(el) el.textContent = window.AppState.settings.storeName || 'Essence — Luxury Perfumes';
@@ -6063,7 +6016,7 @@ window.__productVisualHTML = function(p, opts){
       // delete+insert كل مرة) — هادشي هو لي كيخلي trigger الستوك (AFTER INSERT ON sale_items) يتفعل
       // مرة وحدة بوحدها لكل سطر بيع حقيقي، ماشي فكل مرة sales array يتبدل (شوف تفاصيل فـ sales sync).
       items: cart.map(i => ({ uuid: crypto.randomUUID(), name:i.name, qty:i.qty, price:i.price, brand:i.brand||'', cat:i.cat||'', cost:typeof i.cost==='number'?i.cost:null })),
-      payment: paymentLabel, employee: window.__essenceActorName(), status:'completed',
+      payment: paymentLabel, employee:'You', status:'completed',
       subtotal, discountPct, discount, taxRate: (window.AppState.settings.taxRate || 0), tax, total,
       paidNow, creditAmount, note: cartNote, coupon: couponCode
     };
@@ -6080,7 +6033,7 @@ window.__productVisualHTML = function(p, opts){
       if(window.AppState.stockMovements){
         window.AppState.stockMovements.unshift({
           name: item.name, sku: p ? p.sku : '', type:'out', qty: -item.qty,
-          reason: `Sold — POS #${invId}`, who: window.__essenceActorName(), time: timeLabel, c1: p ? p.c1 : '#7C5CFF',
+          reason: `Sold — POS #${invId}`, who:'You', time: timeLabel, c1: p ? p.c1 : '#7C5CFF',
           _txn: true,
         });
       }
@@ -6178,13 +6131,13 @@ window.__productVisualHTML = function(p, opts){
     if(panel && panel.style.display !== 'none') scanBarcode(code);
   });
 
-  // ⚠️ كان هنا زر لغة وهمي (prompt 1/2/3 + alert "coming soon" حتى فـ English/Français لي خدامين
-  // فعليا عبر نظام I18N الحقيقي فـ Settings). بدلناه يستعمل نفس window.__i18n.setLang() الحقيقي —
-  // toggle بسيط بين en/fr (اللغتين المدعومتين فعليا)، بلا أي وهم/coming-soon.
   document.getElementById('pos_langBtn').addEventListener('click', () => {
-    const current = (window.__i18n && window.__i18n.lang) || 'en';
-    const next = current === 'en' ? 'fr' : 'en';
-    if(window.__i18n && typeof window.__i18n.setLang === 'function') window.__i18n.setLang(next);
+    const pick = prompt('Choose a language:\n1. English\n2. العربية\n3. Français\n\nEnter a number:', '1');
+    if(pick === null) return;
+    const map = { '1':'English', '2':'العربية', '3':'Français' };
+    const lang = map[pick.trim()];
+    if(!lang){ alert('Please enter 1, 2, or 3.'); return; }
+    alert(`Full ${lang} translation is coming soon — the interface stays in English for now.`);
   });
   document.getElementById('pos_qaScan').addEventListener('click', () => scanBarcode());
 
@@ -6279,19 +6232,20 @@ window.__productVisualHTML = function(p, opts){
 
   // subtle parallax on product cards
   // ---------- Payment methods + Credit/Split customer assignment ----------
-  const knownCustomers = [
-    { name:"Sara Al-Masri", phone:"+961 70 112 883" },
-    { name:"Lina Haddad", phone:"+961 76 552 190" },
-    { name:"Karim Aoun", phone:"+961 71 234 567" },
-    { name:"Yousef Nasser", phone:"+961 70 883 214" },
-  ];
+  // ⚠️ إصلاح: knownCustomers كانت لائحة ديمو ثابتة (Sara Al-Masri/Lina Haddad/Karim Aoun/Yousef
+  // Nasser) بلا علاقة بالزبائن الحقيقيين ديال المحل — و"Assign new" ماكانش كيسجل الزبون الجديد
+  // فحتى مكان (يبان مرة وحدة، من بعد يختفي). دابا كتبنى من window.AppState.debts (نفس اللائحة
+  // الحقيقية المستعملة فـ Debts page)، وأي زبون جديد كيتزاد ليها + يتحفظ.
+  function getKnownCustomers(){
+    return (window.AppState.debts || []).map(d => ({ name: d.name, phone: (d.phone && d.phone !== '—') ? d.phone : '' }));
+  }
   const assignBackdrop = document.getElementById('pos_assignBackdrop');
   const assignList = document.getElementById('pos_assignList');
   const assignSearch = document.getElementById('pos_assignSearch');
 
   function renderAssignList(filter=''){
     const f = filter.trim().toLowerCase();
-    const matches = knownCustomers.filter(c => c.name.toLowerCase().includes(f));
+    const matches = getKnownCustomers().filter(c => c.name.toLowerCase().includes(f));
     assignList.innerHTML = matches.map(c => `
       <div class="assign-existing" data-name="${c.name}" data-phone="${c.phone}">
         <div class="c-avatar">${c.name.split(' ').map(w=>w[0]).slice(0,2).join('')}</div>
@@ -6367,7 +6321,18 @@ window.__productVisualHTML = function(p, opts){
   document.getElementById('pos_assignConfirm').addEventListener('click', () => {
     const name = document.getElementById('pos_newDebtorName').value.trim();
     const phone = document.getElementById('pos_newDebtorPhone').value.trim();
-    if(name && phone){ confirmAssign(name, phone); }
+    if(name && phone){
+      // ⚠️ إصلاح: كنسجلو الزبون الجديد فـ AppState.debts الحقيقية (بلا دين، 0.00) إذا ماكانش
+      // موجود من قبل — وإلا كان كيبان مرة وحدة بوحدها فهاد الجلسة ويختفي بعدها بلا أثر.
+      const debts = window.AppState.debts || (window.AppState.debts = []);
+      const exists = debts.find(d => d.name.toLowerCase() === name.toLowerCase() || (phone && d.phone === phone));
+      if(!exists){
+        debts.push({ name, phone: phone || '—', debt: 0, paid: 0, lastPayment: '—', invoices: [] });
+        if(window.__persistAppState) window.__persistAppState();
+        if(window.__essenceSyncDebtsToSupabase) window.__essenceSyncDebtsToSupabase();
+      }
+      confirmAssign(name, phone);
+    }
     else if(name || phone){ alert('Please fill in both name and phone for a new debtor.'); }
     else if(assignMandatory){ /* credit/split sale needs a real pick — do nothing, keep modal open */ }
     else { assignBackdrop.classList.remove('show'); }
@@ -8161,7 +8126,7 @@ window.__productVisualHTML = function(p, opts){
     if(liveProduct) liveProduct.stock = newStock; // كايبان مباشرة فـ Products وPOS بلا refresh
     movements.unshift({
       name, sku: skuByName[name] || 'N/A', type, qty: signedQty, reason,
-      who: window.__essenceActorName(), time: 'Just now', c1:'#7C5CFF'
+      who: 'Rania S.', time: 'Just now', c1:'#7C5CFF'
     });
 
     closeDrawer();
@@ -8372,7 +8337,7 @@ window.__productVisualHTML = function(p, opts){
       const dateLabel = d.toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'});
       // id + dateISO مزادين هنا (ماكانوش قبل) باش يتزامنو صح مع Supabase (id=uuid ضروري للـ upsert،
       // dateISO خاصها تتبعت كـ created_at حقيقي بدل ما نخليو Supabase يحط now() لكل صف بلا فرق بينهم).
-      expenses.unshift({ id: crypto.randomUUID(), date: dateLabel, dateISO: dateInput.value || window.__todayISO(), day: 'Today', cat, desc, employee: window.__essenceActorName(), amount });
+      expenses.unshift({ id: crypto.randomUUID(), date: dateLabel, dateISO: dateInput.value || window.__todayISO(), day: 'Today', cat, desc, employee: 'You', amount });
       // راس المال ينقص بكامل المصروف وقت التسجيل
       window.AppState.capital = (window.AppState.capital || 0) - amount;
       (window.AppState.capitalMovements = window.AppState.capitalMovements || []).unshift({
@@ -8425,7 +8390,7 @@ window.__productVisualHTML = function(p, opts){
 
   const CAT_COLORS = ['#7C5CFF','#C8A04A','#a78bfa','#8a6b2e','#F87171','#34D399','#5da3f0'];
 
-  function money(n){ return Math.round(n||0).toLocaleString() + ' دج'; }
+  function money(n){ return window.__money(n); }
   function saleTotal(s){
     if(window.__saleFinancials) return window.__saleFinancials(s).total;
     return s.items.reduce((x,i)=>x + i.qty*i.price, 0);
@@ -8464,15 +8429,6 @@ window.__productVisualHTML = function(p, opts){
     document.getElementById('reports_todayExpenses').textContent = Math.round(todayExpenses).toLocaleString() + ' دج';
     document.getElementById('reports_todayProfit').textContent = Math.round(todayGrossProfit).toLocaleString() + ' دج';
     document.getElementById('reports_todayNetProfit').textContent = Math.round(todayNet).toLocaleString() + ' دج';
-    // ---- عرض الكاشير (بديل بلا cost/margin): عدد حركات البيع اليوم + المبلغ بعد المصاريف بوحدها
-    // (income - expenses، بلا أي حساب ديال الربح/التكلفة) ----
-    const todayExpensesCount = expenses.filter(e => e.date === TODAY_LABEL || e.day === TODAY_LABEL).length;
-    const todayTxnCount = todaySales.length + todayExpensesCount;
-    const todayNetSimple = todayIncome - todayExpenses;
-    const txnCountEl = document.getElementById('reports_todayTxnCount');
-    const netSimpleEl = document.getElementById('reports_todayNetSimple');
-    if(txnCountEl) txnCountEl.textContent = String(todayTxnCount);
-    if(netSimpleEl) netSimpleEl.textContent = Math.round(todayNetSimple).toLocaleString() + ' دج';
     // النسب (+6.2% إلخ) كانت مفبركة بلا أي مقارنة حقيقية بيوم سابق — خبيناها بدل ما نختلقو أرقام.
     ['reports_todayIncomeTrend','reports_todayExpensesTrend','reports_todayProfitTrend','reports_todayNetProfitTrend'].forEach(id => {
       const el = document.getElementById(id);
@@ -8581,6 +8537,13 @@ window.__productVisualHTML = function(p, opts){
     const catNames = Object.keys(catAgg);
     const donutSvg = document.getElementById('reports_donutChart');
     const R = 78, CX = 90, CY = 90, STROKE = 20;
+    // ⚠️ إصلاح: "39.7%" كانت رقم ثابت هاردكودد فـ HTML، ماكانتش كتتبدل حتى بيع/فئة تتزاد — دابا
+    // Blended Margin حقيقي = (مجموع الإيراد - مجموع الكلفة) / مجموع الإيراد، محسوب من catAgg.
+    const blendedRevenue = Object.values(catAgg).reduce((s,c)=>s+c.revenue,0);
+    const blendedCost = Object.values(catAgg).reduce((s,c)=>s+c.cost,0);
+    const blendedPct = blendedRevenue > 0 ? ((blendedRevenue - blendedCost) / blendedRevenue * 100) : 0;
+    const pctEl = document.getElementById('reports_donutPct');
+    if(pctEl) pctEl.textContent = blendedPct.toFixed(1) + '%';
     if(catNames.length === 0){
       donutSvg.innerHTML = `<circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="var(--fill-2)" stroke-width="${STROKE}"/>`;
       document.getElementById('reports_donutLegend').innerHTML = `<div style="padding:10px 2px; color:var(--text-faint); font-size:13px;">${t('reports.noSalesYet')}</div>`;
@@ -8653,7 +8616,6 @@ window.__productVisualHTML = function(p, opts){
     }).join('') : `<tr><td colspan="5" style="text-align:center; color:var(--text-faint); padding:24px;">${t('reports.noSalesYet')}</td></tr>`;
 
     renderCapital();
-    if(window.__essenceApplyReportsRoleGating) window.__essenceApplyReportsRoleGating();
     window.__lucideCreateIcons();
   }
 
@@ -8890,6 +8852,10 @@ window.__productVisualHTML = function(p, opts){
     const payCounts = {};
     sales.forEach(s => { const p = s.payment || 'Cash'; payCounts[p] = (payCounts[p]||0) + 1; });
     const payNames = Object.keys(payCounts);
+    // ⚠️ إصلاح: "412" كانت رقم ثابت هاردكودد فـ HTML، ماكانتش كتتبدل حتى بيع يتزاد — دابا عدد
+    // المعاملات الحقيقي (sales.length).
+    const payDonutPctEl = document.getElementById('analytics_payDonutPct');
+    if(payDonutPctEl) payDonutPctEl.textContent = sales.length.toLocaleString();
     const donutSvg = document.getElementById('analytics_payDonut');
     const R = 78, CX = 90, CY = 90, STROKE = 20;
     if(payNames.length === 0){
@@ -8912,7 +8878,7 @@ window.__productVisualHTML = function(p, opts){
         <div class="donut-legend-row"><div class="dot" style="background:${d.color}"></div><div class="name">${PAYMENT_KEY_MAP[d.name] ? t(PAYMENT_KEY_MAP[d.name]) : d.name}</div><div class="val">${Math.round(d.count/totalPay*100)}%</div></div>`).join('');
     }
 
-    /* ---------- Employee leaderboard (من sale.employee الحقيقي — دابا معمر باسم store_members الحقيقي عبر __essenceActorName وقت البيع، fallback 'You' غير للبيوعات القديمة/local-only) ---------- */
+    /* ---------- Employee leaderboard (من sale.employee الحقيقي — ⚠️ بلا نظام login حقيقي كيبين غير "You") ---------- */
     const empAgg = {};
     sales.forEach(s => {
       const name = s.employee || 'You';
@@ -9001,7 +8967,14 @@ window.__productVisualHTML = function(p, opts){
   function syncCoreFieldsFromState(){
     document.getElementById('settings_taxRate').value = window.AppState.settings.taxRate;
     document.getElementById('settings_storeName').value = window.AppState.settings.storeName;
-    document.getElementById('settings_currency').selectedIndex = window.AppState.settings.currency || 0;
+    const cur = window.AppState.settings.currency;
+    document.getElementById('settings_currency').value = (typeof cur === 'string' && cur) ? cur : 'DZD';
+    // ⚠️ إصلاح: address/phone/email كانو غير DOM values (hardcoded فـ HTML)، ماكانوش جزء من
+    // AppState.settings أبدا — الحفظ (saveAllChanges) كان كيقراهم بصح ما كيكتبهمش فـ AppState، فـ
+    // refresh كانو يرجعو للقيم الديمو المكتوبة فـ HTML (value="..."). دابا حقيقيين وكيتحفظو.
+    document.getElementById('settings_address').value = window.AppState.settings.address || '';
+    document.getElementById('settings_phone').value = window.AppState.settings.phone || '';
+    document.getElementById('settings_email').value = window.AppState.settings.email || '';
   }
   syncCoreFieldsFromState();
 
@@ -9033,12 +9006,24 @@ window.__productVisualHTML = function(p, opts){
     });
   });
 
-  /* ---------- Large expense flag threshold text (كان نص ثابت "500 دج" بلا ما يترجم ولا يتحسب) ---------- */
-  const LARGE_EXPENSE_THRESHOLD = 500;
+  /* ---------- Large expense flag threshold (كان رقم ثابت "500" هاردكودد فالكود، بلا ما يقدر
+     صاحب المحل يبدلو — دابا input حقيقي مربوط بـ window.AppState.settings.largeExpenseThreshold) ---------- */
+  const largeExpenseInput = document.getElementById('settings_largeExpenseThreshold');
   function renderLargeExpenseSub(){
-    document.getElementById('settings_largeExpenseSub').textContent = tf('settings.largeExpenseSub', {amount: LARGE_EXPENSE_THRESHOLD});
+    const amount = (typeof window.AppState.settings.largeExpenseThreshold === 'number') ? window.AppState.settings.largeExpenseThreshold : 500;
+    if(largeExpenseInput) largeExpenseInput.value = amount;
+    document.getElementById('settings_largeExpenseSub').textContent = tf('settings.largeExpenseSub', {amount});
   }
   renderLargeExpenseSub();
+  if(largeExpenseInput){
+    largeExpenseInput.addEventListener('input', () => {
+      const parsed = parseFloat(largeExpenseInput.value);
+      window.AppState.settings.largeExpenseThreshold = isNaN(parsed) ? 0 : parsed;
+      document.getElementById('settings_largeExpenseSub').textContent = tf('settings.largeExpenseSub', {amount: window.AppState.settings.largeExpenseThreshold});
+      markDirty();
+      if(window.__persistAppState) window.__persistAppState();
+    });
+  }
 
   /* ---------- Dirty-state tracking ---------- */
   const dirtyBadge = document.getElementById('settings_dirtyBadge');
@@ -9058,7 +9043,7 @@ window.__productVisualHTML = function(p, opts){
     storeName:'Essence — Luxury Perfumes', currency:0, taxRate:0,
     address:'Al Baraka Mall, Downtown, 3rd Floor', phone:'+971 4 555 0192', email:'hello@essence-perfumes.com',
     printer:0, paper:0, receiptFooter:'Thank you for shopping with Essence. All sales final after 14 days.',
-    logoHtml:'',
+    logoHtml:'<svg fill="none" stroke-linecap="round" stroke-width="2" viewbox="0 0 24 24"><path d="M12 2v6M9 8h6l1.5 3.5a5 5 0 11-9 0z"></path></svg>',
   };
   const factoryToggleStates = [true, true, false, true, true, false, true, true]; // t=1..8 in DOM order
   const factoryBranches = () => ([
@@ -9405,9 +9390,8 @@ window.__productVisualHTML = function(p, opts){
     el.addEventListener('change', markDirty);
   });
 
-  /* ---------- Logo upload ----------
-     محفوظ فورا (بلا انتظار "Save Changes") عبر __essenceSetStoreLogo المشتركة — كيبدل السيدبار
-     و Settings preview بيها فنفس الوقت، ماشي محلي لهاد الصفحة بوحدها. */
+  /* ---------- Logo upload ---------- */
+  const logoPreview = document.getElementById('settings_logoPreview');
   const logoInput = document.getElementById('settings_logoInput');
   document.getElementById('settings_uploadLogoBtn').addEventListener('click', () => logoInput.click());
   logoInput.addEventListener('change', () => {
@@ -9415,9 +9399,11 @@ window.__productVisualHTML = function(p, opts){
     if(!file) return;
     if(!file.type.startsWith('image/')){ alert(t('settings.pleaseChooseImage')); return; }
     const reader = new FileReader();
-    reader.onload = (e) => { if(window.__essenceSetStoreLogo) window.__essenceSetStoreLogo(e.target.result); };
+    reader.onload = (e) => {
+      logoPreview.innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover; border-radius:inherit;"/>`;
+      markDirty();
+    };
     reader.readAsDataURL(file);
-    logoInput.value = '';
   });
 
   /* ---------- Theme option cards (mirrors topbar toggle) ---------- */
@@ -9443,28 +9429,28 @@ window.__productVisualHTML = function(p, opts){
     window.__lucideCreateIcons();
   });
 
-  /* ---------- Save / Discard (Store Info + Receipts + toggles) ----------
-     ⚠️ الشعار (logo) ماشي جزء من هاد الـ snapshot — كيتحفظ فورا بوحدو عبر __essenceSetStoreLogo
-     (السيدبار + Settings preview فنفس الوقت)، بلا انتظار "Save Changes"، وبلا "Discard" يرجعو. */
+  /* ---------- Save / Discard (Store Info + Receipts + toggles) ---------- */
   let savedSnapshot = captureSnapshot();
   function captureSnapshot(){
     return {
-      storeName: val('settings_storeName'), currency: idx('settings_currency'), taxRate: val('settings_taxRate'),
+      storeName: val('settings_storeName'), currency: val('settings_currency'), taxRate: val('settings_taxRate'),
       address: val('settings_address'), phone: val('settings_phone'), email: val('settings_email'),
       printer: idx('settings_printerSelect'), paper: idx('settings_paperSelect'),
+      logoHtml: logoPreview.innerHTML,
     };
   }
   function val(id){ return document.getElementById(id).value; }
   function idx(id){ return document.getElementById(id).selectedIndex; }
   function applySnapshot(snap){
     document.getElementById('settings_storeName').value = snap.storeName;
-    document.getElementById('settings_currency').selectedIndex = snap.currency;
+    document.getElementById('settings_currency').value = snap.currency;
     document.getElementById('settings_taxRate').value = snap.taxRate;
     document.getElementById('settings_address').value = snap.address;
     document.getElementById('settings_phone').value = snap.phone;
     document.getElementById('settings_email').value = snap.email;
     document.getElementById('settings_printerSelect').selectedIndex = snap.printer;
     document.getElementById('settings_paperSelect').selectedIndex = snap.paper;
+    logoPreview.innerHTML = snap.logoHtml;
   }
   // Hook عام: __essenceSyncStoreToSupabase (فآخر الملف) كينادي هاد الدالة بعد ما يجيب قيم Supabase
   // async عند تحميل الصفحة (كتوصل بعد ما الصفحة تكون خدامة من قبل)، باش الحقول تتعمر بلا ما يحتاج
@@ -9477,11 +9463,15 @@ window.__productVisualHTML = function(p, opts){
 
   function saveAllChanges(){
     savedSnapshot = captureSnapshot();
-    // نكتبو Tax Rate و Store Name و Currency فـ AppState.settings مباشرة — POS/Sales كايقراو منهم بجد دابا (مصدر مشترك، كيتحفظ فـ localStorage)
+    // نكتبو Tax Rate و Store Name و Currency و Address/Phone/Email فـ AppState.settings مباشرة —
+    // POS/Sales/Receipt كايقراو منهم بجد دابا (مصدر مشترك، كيتحفظ فـ localStorage + Supabase).
     const parsedTax = parseFloat(savedSnapshot.taxRate);
     window.AppState.settings.taxRate = isNaN(parsedTax) ? 0 : parsedTax;
     window.AppState.settings.storeName = savedSnapshot.storeName || 'Essence — Luxury Perfumes';
-    window.AppState.settings.currency = savedSnapshot.currency;
+    window.AppState.settings.currency = savedSnapshot.currency || 'DZD';
+    window.AppState.settings.address = savedSnapshot.address || '';
+    window.AppState.settings.phone = savedSnapshot.phone || '';
+    window.AppState.settings.email = savedSnapshot.email || '';
     if(window.__persistAppState) window.__persistAppState();
     if(window.__essenceSyncStoreToSupabase) window.__essenceSyncStoreToSupabase(); // PHASE 8 خطوة 4: تحديث جدول stores إذا كاينة session
     if(window.__pageRefreshers && window.__pageRefreshers.pos) window.__pageRefreshers.pos();
@@ -9596,47 +9586,6 @@ window.__productVisualHTML = function(p, opts){
 })();
 
 
-// ================= الشعار (Logo) =================
-// فارغ بالتصميم عند أول تشغيل — كل عميل كيختار شعارو الخاص (سيدبار أو Settings)، كيتحفظ فورا فـ
-// AppState.settings.logoDataUrl (نفس آلية localStorage ديال باقي التطبيق). محلي فهاد المرحلة
-// (بلا عمود logo فـ جدول stores فـ Supabase بعد)، يعني كيبقى محفوظ فهاد الجهاز/المتصفح.
-const EMPTY_LOGO_ICON = '<i data-lucide="image-plus"></i>';
-function renderLogoInto(el, dataUrl){
-  if(!el) return;
-  el.innerHTML = dataUrl
-    ? `<img src="${dataUrl}" style="width:100%; height:100%; object-fit:cover; border-radius:inherit;"/>`
-    : EMPTY_LOGO_ICON;
-}
-function applyLogoToUI(){
-  const dataUrl = (window.AppState && window.AppState.settings && window.AppState.settings.logoDataUrl) || '';
-  renderLogoInto(document.getElementById('sidebar_logoBtn'), dataUrl);
-  const settingsPreview = document.getElementById('settings_logoPreview');
-  if(settingsPreview) renderLogoInto(settingsPreview, dataUrl);
-  window.__lucideCreateIcons();
-}
-window.__essenceApplyLogoToUI = applyLogoToUI;
-function setStoreLogo(dataUrl){
-  window.AppState.settings.logoDataUrl = dataUrl || '';
-  applyLogoToUI();
-  if(window.__persistAppState) window.__persistAppState();
-}
-window.__essenceSetStoreLogo = setStoreLogo;
-function readImageFileAsLogo(file){
-  if(!file) return;
-  if(!file.type.startsWith('image/')){ alert(t('settings.pleaseChooseImage')); return; }
-  const reader = new FileReader();
-  reader.onload = (e) => setStoreLogo(e.target.result);
-  reader.readAsDataURL(file);
-}
-(function setupSidebarLogoPicker(){
-  const btn = document.getElementById('sidebar_logoBtn');
-  const input = document.getElementById('sidebar_logoInput');
-  if(!btn || !input) return;
-  btn.addEventListener('click', () => input.click());
-  input.addEventListener('change', () => { readImageFileAsLogo(input.files[0]); input.value = ''; });
-})();
-applyLogoToUI(); // أول عرض عند تحميل الصفحة (قبل حتى ما يزور المستخدم Settings)
-
 // ================= ROUTER =================
 function syncThemeIcons(){
   const isLight = document.documentElement.getAttribute('data-theme') === 'light';
@@ -9695,7 +9644,7 @@ goToPage('home');
     border:1px solid var(--border); box-shadow:0 12px 40px var(--shadow-color);`;
   document.body.appendChild(panel);
 
-  function money(n){ return Math.round(n||0).toLocaleString() + ' دج'; }
+  function money(n){ return window.__money(n); }
   function closePanel(){ panel.style.display = 'none'; }
 
   function goSearch(page, searchInputId, query){
@@ -9777,7 +9726,7 @@ goToPage('home');
 // (ماشي مرة وحدة وقت تحميل الصفحة) باش تعكس آخر البيانات وتترجم صح حسب اللغة الحالية.
 (function(){
   const LOW_STOCK_THRESHOLD = 15; // نفس القيمة المستعملة فـ Home/Products
-  function money(n){ return Math.round(n||0).toLocaleString() + ' دج'; }
+  function money(n){ return window.__money(n); }
 
   const clsColor = { red:'var(--error)', gold:'var(--gold)', purple:'var(--purple)' };
   const clsBg = { red:'rgba(248,113,113,0.14)', gold:'var(--gold-dim)', purple:'var(--purple-dim)' };
@@ -9895,6 +9844,20 @@ goToPage('home');
   // __essenceSyncProductsToSupabase عند كل وحدة منهم)، هادوك تعديلات إدارية حقيقية ماشي نتيجة بيع.
   let lastCapitalSnapshot = '', lastStockSnapshot = '', lastSalesSnapshot = '', lastDebtsSnapshot = '',
       lastHeldOrdersSnapshot = '', lastCouponsSnapshot = '';
+  let __storageFailureBannerShown = false;
+  window.__essenceShowStorageFailureBanner = function(err){
+    if(__storageFailureBannerShown) return; // مرة وحدة بوحدها، ماشي كل 1.5 ثانية
+    __storageFailureBannerShown = true;
+    try {
+      const el = document.createElement('div');
+      el.setAttribute('style', 'position:fixed; bottom:16px; left:50%; transform:translateX(-50%); z-index:99998; max-width:420px; background:#3a1414; border:1px solid #a33; color:#fff; padding:12px 16px; border-radius:12px; font-family:Inter,sans-serif; font-size:12.5px; line-height:1.5; box-shadow:0 8px 24px rgba(0,0,0,0.4);');
+      el.innerHTML = 'تعذر حفظ آخر تغيير محليا (مساحة التخزين فالمتصفح ممكن تكون ممتلئة — عادة بسبب صور منتجات كبار). التغييرات الجداد ما غاديش تتحفظ حتى تحل المشكل. جرب تنقص حجم صور المنتجات، أو امسح بيانات المتصفح ديال الموقع.'
+        + '<div style="margin-top:8px;"><button id="essenceStorageBannerClose" style="background:#fff2; border:none; color:#fff; padding:5px 10px; border-radius:8px; cursor:pointer; font-size:11.5px;">فهمت</button></div>';
+      document.body.appendChild(el);
+      const btn = document.getElementById('essenceStorageBannerClose');
+      if(btn) btn.addEventListener('click', () => el.remove());
+    } catch(e2){ /* ما نخليوش banner فاشل يكسر الصفحة */ }
+  };
   function persistNow(){
     try {
       const json = JSON.stringify(window.AppState);
@@ -9904,6 +9867,11 @@ goToPage('home');
       }
     } catch(e){
       console.warn('[Essence] تعذر حفظ البيانات (localStorage ممكن يكون ممتلئ أو معطل):', e);
+      // ⚠️ إصلاح: هاد الفشل كان صامت بالكامل (console.warn بوحدو) — إذا وقع فعلا (مثلا quota
+      // ديال localStorage طارت بسبب صور منتجات base64 كبار)، كان معناه لا حاجة كتتحفظ محليا
+      // بعدها (بيوعات، حذف branch، تعديل settings...)، والمستخدم ماعندوش حتى فكرة علاش التغييرات
+      // كترجع لحالها الأصلي بعد refresh. دابا كنبينو تنبيه واحد واضح (مرة وحدة، ماشي كل تيك).
+      if(window.__essenceShowStorageFailureBanner) window.__essenceShowStorageFailureBanner(e);
     }
     try {
       const capJson = JSON.stringify(window.AppState.capitalMovements || []);
@@ -10048,55 +10016,9 @@ goToPage('home');
     lock(document.getElementById('settings_saveReceiptDesignBtn'), canManageCatalog, catalogReason);
     lock(document.getElementById('settings_inviteTeamBtn'), canManageCatalog, catalogReason);
     lock(document.getElementById('settings_teamSaveBtn'), canManageCatalog, catalogReason);
-
-    applyReportsRoleGating(r);
   }
   window.__essenceApplyRoleGating = applyRoleGating;
 
-  // ===== Reports: عرض مبسط للكاشير (بلا راس المال/الربح/الهامش/أفضل المنتجات) =====
-  // طلب المستخدم: cashier يشوف غير مجموع مبيعات اليوم، مصاريف اليوم، عدد حركات اليوم، والمبلغ بعد
-  // خصم المصاريف (income - expenses بوحدها، بلا أي حساب ديال التكلفة/الربح). كلشي آخر (راس المال،
-  // Profit/Net Profit المبنيين على cost، الهامش بالفئة، أفضل المنتجات/البراندات بالإيراد، الرسم
-  // البياني) فيه أرقام حساسة (تكلفة الشراء، الهامش، سيولة المحل) خاصها تبقى مقصورة على owner/manager.
-  function applyReportsRoleGating(r){
-    const isCashier = (r === 'cashier');
-    const showEl = (id, show) => { const el = document.getElementById(id); if(el) el.style.display = show ? '' : 'none'; };
-
-    showEl('reports_profitCard', !isCashier);
-    showEl('reports_netProfitCard', !isCashier);
-    showEl('reports_todayTxnCard', isCashier);
-    showEl('reports_todayNetSimpleCard', isCashier);
-    showEl('reports_capitalRow', !isCashier);
-    showEl('reports_periodPanel', !isCashier);
-    showEl('reports_chartsRow', !isCashier);
-    showEl('reports_topMoversRow', !isCashier);
-    showEl('reports_marginRow', !isCashier);
-  }
-  window.__essenceApplyReportsRoleGating = function(){ applyReportsRoleGating(role()); };
-
-  // ===== دليل الفريق (team directory) + حل اسم الفاعل الحقيقي =====
-  // مبني على store_members_select RLS (members_select on store_members using is_store_member) —
-  // أي عضو فالمحل يقدر يشوف زملاءه (id + display_name)، بلا حاجة لـ Edge Function. كيتحمل مرة
-  // وحدة عند login/refresh (resolveStoreContext تحت)، وكيتخزن فـ Map (id → display_name) باش
-  // نحلو بيه شكون دار شنو (بيع/مصروف/حركة ستوك) حتى للسطور الجايين remote من زميل آخر.
-  let __teamDirectory = new Map();
-  async function loadTeamDirectory(storeId){
-    try {
-      const { data, error } = await window.__supabase.from('store_members').select('id, display_name, role').eq('store_id', storeId);
-      if(error || !data) return;
-      __teamDirectory = new Map(data.map(m => [m.id, m.display_name || (m.role.charAt(0).toUpperCase() + m.role.slice(1))]));
-    } catch(e){ console.warn('[Essence/Supabase] تعذر جلب دليل الفريق:', e); }
-  }
-  // memberId اختياري: بلا حجة كترجع اسم المستخدم الحالي (لكتابة محلية جديدة)؛ بحجة (uuid جاي من
-  // employee_id/who remote) كتحاول تحلها عبر الدليل — مفيدة لعرض بيوعات/مصاريف/حركات زملاء آخرين.
-  window.__essenceActorName = function(memberId){
-    const store = window.__essenceStore;
-    if(!store || !store.role) return 'You'; // بلا session (local-only/ديمو) — نفس السلوك القديم
-    const id = memberId || store.memberId;
-    if(id === store.memberId) return store.displayName || 'You';
-    if(__teamDirectory.has(id)) return __teamDirectory.get(id);
-    return 'Team'; // عضو ماكاينش بعد فالدليل (نادر: دليل مازال كيتحمل، ولا العضو تحذف)
-  };
 
   async function resolveStoreContext(){
     try {
@@ -10114,7 +10036,6 @@ goToPage('home');
       window.__essenceStore.role = data.role;
       window.__essenceStore.memberId = data.id; // خاصها لـ employee_id فـ expenses/sales/capital_movements/stock_movements
       window.__essenceStore.displayName = data.display_name || null;
-      loadTeamDirectory(data.store_id); // fire-and-forget، ماخاصهاش توقف resolveStoreContext
       updateRoleUI();
       return data.store_id;
     } catch(e){
@@ -10131,11 +10052,15 @@ goToPage('home');
       if(error || !data){ console.warn('[Essence/Supabase] تعذر جلب إعدادات المحل:', error); return; }
       window.AppState.settings.storeName = data.name || window.AppState.settings.storeName;
       window.AppState.settings.taxRate = (typeof data.tax_rate === 'number') ? data.tax_rate : window.AppState.settings.taxRate;
+      window.AppState.settings.currency = data.currency || window.AppState.settings.currency || 'DZD';
+      window.AppState.settings.address = data.address ?? window.AppState.settings.address ?? '';
+      window.AppState.settings.phone = data.phone ?? window.AppState.settings.phone ?? '';
+      window.AppState.settings.email = data.email ?? window.AppState.settings.email ?? '';
       window.AppState.settings.receiptHeaderLine1 = data.receipt_header_line1 ?? window.AppState.settings.receiptHeaderLine1;
       window.AppState.settings.receiptHeaderLine2 = data.receipt_header_line2 ?? window.AppState.settings.receiptHeaderLine2;
       window.AppState.settings.receiptFooterLine1 = data.receipt_footer_line1 ?? window.AppState.settings.receiptFooterLine1;
       window.AppState.settings.receiptFooterLine2 = data.receipt_footer_line2 ?? window.AppState.settings.receiptFooterLine2;
-      // currency: عندنا غير DZD متوفرة محليا (select مقفول على قيمة وحيدة) — ماكاين حتى تزامن حالي.
+      // currency: دابا حقيقية ومتزامنة (فوق) — مزال بلا رموز/تنسيق مخصص لكل عملة، بس code كسuffix.
       if(window.__persistAppState) window.__persistAppState();
       if(window.__essenceRefreshSettingsFields) window.__essenceRefreshSettingsFields();
       if(window.__pageRefreshers){
@@ -10150,19 +10075,18 @@ goToPage('home');
   }
 
   // Hook عام: أي نقطة حفظ فـ Settings (Save Changes / Save Design) كتنادي هاد الدالة بعد ما تكتب فـ AppState.
-  // قفل concurrency (نفس منطق debts/sales): إذا push جاري وتلقى نداء جديد (مثلا Save Changes + autosave
-  // فنفس الوقت)، ما كنديروش نداءين متوازيين للـ Supabase — كنعلمو rerun ونعاودو بعد ما يخلص الأول.
-  let __storePushBusy = false, __storePushRerunNeeded = false;
   window.__essenceSyncStoreToSupabase = async function(){
-    if(__storePushBusy){ __storePushRerunNeeded = true; return; }
-    __storePushBusy = true;
+    const storeId = window.__essenceStore.storeId || await resolveStoreContext();
+    if(!storeId) return; // بلا session/محل → local-only، بلا خطأ يبان للمستخدم
     try {
-      const storeId = window.__essenceStore.storeId || await resolveStoreContext();
-      if(!storeId) return; // بلا session/محل → local-only، بلا خطأ يبان للمستخدم
       const s = window.AppState.settings;
       const { error } = await window.__supabase.from('stores').update({
         name: s.storeName,
         tax_rate: s.taxRate,
+        currency: s.currency || 'DZD',
+        address: s.address || null,
+        phone: s.phone || null,
+        email: s.email || null,
         receipt_header_line1: s.receiptHeaderLine1,
         receipt_header_line2: s.receiptHeaderLine2,
         receipt_footer_line1: s.receiptFooterLine1,
@@ -10174,9 +10098,6 @@ goToPage('home');
     } catch(e){
       console.warn('[Essence/Supabase] __essenceSyncStoreToSupabase فشل:', e);
       if(window.__essenceOutbox) window.__essenceOutbox.markFailed('store');
-    } finally {
-      __storePushBusy = false;
-      if(__storePushRerunNeeded){ __storePushRerunNeeded = false; window.__essenceSyncStoreToSupabase(); }
     }
   };
 
@@ -10223,14 +10144,10 @@ goToPage('home');
   }
 
   // ---------- Categories + Brands (نموذج محلي: brands متداخلة جوا كل category؛ نموذج Supabase: جدول brands منفصل بـ category_id) ----------
-  // قفل concurrency (نفس منطق debts/sales) — يمنع نداءين متوازيين يديرو delete+upsert فنفس الوقت.
-  let __categoriesPushBusy = false, __categoriesPushRerunNeeded = false;
   window.__essenceSyncCategoriesToSupabase = async function(){
-    if(__categoriesPushBusy){ __categoriesPushRerunNeeded = true; return; }
-    __categoriesPushBusy = true;
+    const storeId = await getStoreId();
+    if(!storeId) return;
     try {
-      const storeId = await getStoreId();
-      if(!storeId) return;
       const categories = window.AppState.categories || [];
       let idsAssigned = false;
       categories.forEach(c => {
@@ -10279,21 +10196,14 @@ goToPage('home');
     } catch(e){
       console.warn('[Essence/Supabase] __essenceSyncCategoriesToSupabase فشل:', e);
       if(window.__essenceOutbox) window.__essenceOutbox.markFailed('categories');
-    } finally {
-      __categoriesPushBusy = false;
-      if(__categoriesPushRerunNeeded){ __categoriesPushRerunNeeded = false; window.__essenceSyncCategoriesToSupabase(); }
     }
   };
 
   // ---------- Suppliers ----------
-  // قفل concurrency (نفس منطق debts/sales).
-  let __suppliersPushBusy = false, __suppliersPushRerunNeeded = false;
   window.__essenceSyncSuppliersToSupabase = async function(){
-    if(__suppliersPushBusy){ __suppliersPushRerunNeeded = true; return; }
-    __suppliersPushBusy = true;
+    const storeId = await getStoreId();
+    if(!storeId) return;
     try {
-      const storeId = await getStoreId();
-      if(!storeId) return;
       const suppliers = window.AppState.suppliers || [];
       let idsAssigned = false;
       suppliers.forEach(s => { if(!s.id){ s.id = crypto.randomUUID(); idsAssigned = true; } });
@@ -10317,9 +10227,6 @@ goToPage('home');
     } catch(e){
       console.warn('[Essence/Supabase] __essenceSyncSuppliersToSupabase فشل:', e);
       if(window.__essenceOutbox) window.__essenceOutbox.markFailed('suppliers');
-    } finally {
-      __suppliersPushBusy = false;
-      if(__suppliersPushRerunNeeded){ __suppliersPushRerunNeeded = false; window.__essenceSyncSuppliersToSupabase(); }
     }
   };
 
@@ -10456,15 +10363,10 @@ goToPage('home');
   }
 
   // ---------- Push كامل (upsert + حذف اللي تصفا محليا) ----------
-  // قفل concurrency (نفس منطق debts/sales) — مهم بزاف هنا حيت الدالة كتدير رفع صور (async) داخل
-  // loop؛ نداءين متوازيين يقدرو يرفعو نفس الصورة مرتين أو يديرو delete المنتجات فوقاد بعضياتهم.
-  let __productsPushBusy = false, __productsPushRerunNeeded = false;
   window.__essenceSyncProductsToSupabase = async function(){
-    if(__productsPushBusy){ __productsPushRerunNeeded = true; return; }
-    __productsPushBusy = true;
+    const storeId = await getStoreId();
+    if(!storeId) return;
     try {
-      const storeId = await getStoreId();
-      if(!storeId) return;
       const products = window.AppState.products || [];
       let idsAssigned = false;
       products.forEach(p => { if(!p.id){ p.id = crypto.randomUUID(); idsAssigned = true; } });
@@ -10498,9 +10400,6 @@ goToPage('home');
     } catch(e){
       console.warn('[Essence/Supabase] __essenceSyncProductsToSupabase فشل:', e);
       if(window.__essenceOutbox) window.__essenceOutbox.markFailed('products');
-    } finally {
-      __productsPushBusy = false;
-      if(__productsPushRerunNeeded){ __productsPushRerunNeeded = false; window.__essenceSyncProductsToSupabase(); }
     }
   };
 
@@ -10578,14 +10477,6 @@ goToPage('home');
     }
   }
 
-  // ⚠️ مصدرة لـ window: setupSupabaseSalesSync كتناديها كـ safety net بعد أي push ناجح لـ sales
-  // (migration 007's trigger بدل products.stock فالسيرفر عبر sale_items INSERT — realtime المفروض
-  // يلقط هاد التحديث، بصح إذا الصفحة تعمرات (page load) قبل ما الـ sale_items ديال بيع أوفلاين
-  // توصل وتفعّل الـ trigger، pullProducts الأولية عند التحميل كتجيب stock قديم وكتبقى عالقة حتى
-  // realtime تلقط تحديث لاحق — هاد النداء المباشر بعد نجاح push ديال sales كيسد هاد الفجوة بلا
-  // اعتماد كلي على realtime).
-  window.__essencePullProducts = pullProducts;
-
   pullProducts().then(subscribeRealtime);
 })();
 
@@ -10616,14 +10507,10 @@ goToPage('home');
   }
 
   // ---------- Push كامل (upsert + حذف اللي تصفا محليا) ----------
-  // قفل concurrency (نفس منطق debts/sales).
-  let __expensesPushBusy = false, __expensesPushRerunNeeded = false;
   window.__essenceSyncExpensesToSupabase = async function(){
-    if(__expensesPushBusy){ __expensesPushRerunNeeded = true; return; }
-    __expensesPushBusy = true;
+    const storeId = await getStoreId();
+    if(!storeId) return;
     try {
-      const storeId = await getStoreId();
-      if(!storeId) return;
       const memberId = await getMemberId();
       const expenses = window.AppState.expenses || [];
       let idsAssigned = false;
@@ -10655,9 +10542,6 @@ goToPage('home');
     } catch(e){
       console.warn('[Essence/Supabase] __essenceSyncExpensesToSupabase فشل:', e);
       if(window.__essenceOutbox) window.__essenceOutbox.markFailed('expenses');
-    } finally {
-      __expensesPushBusy = false;
-      if(__expensesPushRerunNeeded){ __expensesPushRerunNeeded = false; window.__essenceSyncExpensesToSupabase(); }
     }
   };
 
@@ -10674,7 +10558,7 @@ goToPage('home');
           const d = new Date(re.created_at);
           return {
             id: re.id, cat: re.category, desc: re.description, amount: re.amount,
-            employee: window.__essenceActorName(re.employee_id),
+            employee: 'You', // ماكاين حتى ربط بأسماء store_members محليا بعد (خطوة لاحقة إذا لزم)
             dateISO: re.created_at,
             date: d.toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'}),
             day: window.__todayISO && re.created_at.slice(0,10) === window.__todayISO() ? 'Today' : '',
@@ -10746,9 +10630,6 @@ goToPage('home');
     return undefined;
   }
 
-  const __syncedCapitalHashes = new Map(); // uuid -> آخر hash تبعت بنجاح — نفس منطق sales، كيوقف
-  // loop بين push/pull (pull كيعاود يبني date/time بصيغة مغايرة شوية → autosave كيحس بفرق → push
-  // جديد بلا تغيير حقيقي → realtime يعاود يفعل pull → loop بلا نهاية بلا هاد الحماية).
   window.__essenceSyncCapitalToSupabase = async function(){
     const storeId = await getStoreId();
     if(!storeId) return;
@@ -10764,15 +10645,10 @@ goToPage('home');
         const iso = toISO(m);
         if(iso) row.created_at = iso;
         return row;
-      }).filter(row => {
-        const hash = JSON.stringify(row);
-        if(__syncedCapitalHashes.get(row.id) === hash) return false; // ماتبدلش من آخر push ناجح — نفوتو عليه
-        return true;
       });
       if(rows.length){
         const { error } = await window.__supabase.from('capital_movements').upsert(rows);
-        if(error){ console.warn('[Essence/Supabase] تعذر حفظ حركات راس المال:', error); }
-        else { rows.forEach(row => __syncedCapitalHashes.set(row.id, JSON.stringify(row))); }
+        if(error) console.warn('[Essence/Supabase] تعذر حفظ حركات راس المال:', error);
       }
       console.log('[Essence/Supabase] راس المال تزامن ✅');
       if(window.__essenceOutbox) window.__essenceOutbox.markSuccess('capital');
@@ -10861,7 +10737,6 @@ goToPage('home');
     return (p && p.id) || null;
   }
 
-  const __syncedStockMoveHashes = new Map(); // نفس منطق sales/capital — يوقف loop push↔pull بلا نهاية
   window.__essenceSyncStockMovementsToSupabase = async function(){
     const storeId = await getStoreId();
     if(!storeId) return;
@@ -10880,15 +10755,10 @@ goToPage('home');
       const rows = movements.map(m => ({
         id: m.id, store_id: storeId, product_id: resolveProductId(m.name),
         type: m.type, qty: Math.abs(m.qty || 0), reason: m.reason || null, who: memberId,
-      })).filter(row => {
-        const hash = JSON.stringify(row);
-        if(__syncedStockMoveHashes.get(row.id) === hash) return false; // ماتبدلش من آخر push ناجح
-        return true;
-      });
+      }));
       if(rows.length){
         const { error } = await window.__supabase.from('stock_movements').upsert(rows);
-        if(error){ console.warn('[Essence/Supabase] تعذر حفظ حركات الستوك (RLS: owner/manager بوحدهم):', error); }
-        else { rows.forEach(row => __syncedStockMoveHashes.set(row.id, JSON.stringify(row))); }
+        if(error) console.warn('[Essence/Supabase] تعذر حفظ حركات الستوك (RLS: owner/manager بوحدهم):', error);
       }
       console.log('[Essence/Supabase] حركات الستوك تزامنت ✅');
       if(window.__essenceOutbox) window.__essenceOutbox.markSuccess('stockMovements');
@@ -10908,12 +10778,8 @@ goToPage('home');
         const mapped = remote.map(rm => ({
           id: rm.id, name: (rm.products && rm.products.name) || '', sku: (rm.products && rm.products.sku) || '',
           type: rm.type, qty: rm.type === 'out' ? -Math.abs(rm.qty) : Math.abs(rm.qty),
-          reason: rm.reason || '', who: window.__essenceActorName(rm.who), time: new Date(rm.created_at).toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'}),
+          reason: rm.reason || '', who: 'Team', time: new Date(rm.created_at).toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'}),
           c1: '#7C5CFF',
-          // ⚠️ علامة السطور لي كتبها trigger migration 007 (reason ديالهم كيبدا بهاد النصوص) بـ
-          // _txn:true بعد الجلب — وإلا push الجاي غادي يعاود يتقطها كـ "غير معالجة" (الفلترة
-          // !m._txn) ويرسلها upsert من جديد (بلا تغيير حقيقي) → realtime يعاود يفعل pull → loop.
-          _txn: /^(Sold|Returned) — Invoice #/.test(rm.reason || ''),
         }));
         if(Array.isArray(window.AppState.stockMovements)){
           window.AppState.stockMovements.length = 0;
@@ -11037,9 +10903,6 @@ goToPage('home');
       }
       console.log('[Essence/Supabase] المبيعات تزامنت ✅');
       if(window.__essenceOutbox) window.__essenceOutbox.markSuccess('sales');
-      // safety net: migration 007's trigger بدل products.stock فالسيرفر وقت INSERT/UPDATE ديال sale_items/sales
-      // (بيع جديد أو return) — نعاود نجيب المنتجات مباشرة بدل ما نعتمدو بس على realtime.
-      if(window.__essencePullProducts) window.__essencePullProducts();
     } catch(e){
       console.warn('[Essence/Supabase] __essenceSyncSalesToSupabase فشل:', e);
       if(window.__essenceOutbox) window.__essenceOutbox.markFailed('sales');
@@ -11073,7 +10936,7 @@ goToPage('home');
             time: d.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'}), register: rs.register || 'Register 1',
             customer: existing.customer ?? null, walkIn: existing.walkIn ?? !existing.customer,
             items,
-            payment: rs.payment, employee: existing.employee || window.__essenceActorName(rs.employee_id), status: rs.status,
+            payment: rs.payment, employee: existing.employee || 'Team', status: rs.status,
             subtotal: rs.subtotal, discountPct: existing.discountPct || 0, discount: rs.discount, taxRate: existing.taxRate || 0, tax: rs.tax, total: rs.total,
             paidNow: rs.paid_now, creditAmount: rs.credit_amount, note: rs.note, coupon: rs.coupon,
           };
@@ -11529,22 +11392,6 @@ goToPage('home');
   window.addEventListener('online', flushPending);
   document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') flushPending(); });
   setInterval(flushPending, 20000);
-  window.__essenceFlushOutbox = flushPending; // معروضة برا باش زر "Sync Now" (تحت) يقدر يديرها يدويا
-
-  // ===== زر Sync Now (كل التوباراة، id$="_syncNowBtn") =====
-  // بيع أوفلاين → أونلاين محتاج أحيانا انتظار (outbox retry كل 20 ثانية، ولا online event، ولا
-  // visibilitychange) — هاد الزر كيعطي للمستخدم تحكم يدوي فوري: (1) دفع أي حاجة معلقة فالـ outbox
-  // مباشرة (بلا انتظار)، (2) reload كامل للصفحة (نفس نمط ما بعد login) باش pull جديد يخدم لكل
-  // الموديولات (products/categories/sales/capital/stock/debts/settings/held_orders/coupons) — أبسط
-  // وأضمن بكثير من نداء كل دالة pull وحدة وحدة (بعضها ماشي معروضة على window أصلا).
-  document.querySelectorAll('.sync-now-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      if(btn.classList.contains('syncing')) return; // منع الضغط المتكرر أثناء التشغيل
-      btn.classList.add('syncing');
-      try { await flushPending(); } catch(e){ console.warn('[Essence/Supabase] Sync Now (push) فشل:', e); }
-      location.reload();
-    });
-  });
 
   // ===== Badge UI: مؤشر صغير عائم (بلا مس فأي HTML موجود)، كيبان غير كاين تغيير معلق ولا offline =====
   let badgeEl = null;
